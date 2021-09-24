@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+    <head>
+
+        <%- include("partials/header.ejs"); %>
+
+        <title>Settings</title>
+
+    </head>
+    <body onload="refreshSettings();">
+
+        
+
+        <%- include("partials/menu.ejs"); %>
+
+
+            <h1>Settings</h1>
+
+            <div class="content-wrapper">
+                
+                <div>
+                    <div class="input-wrapper">
+                        <label for="ipSettingsInput">IP address</label>
+                        <input type="text" name="" id="ipSettingsInput" placeholder="192.168.0.100">
+                    </div>
+    
+                    <div class="input-wrapper">
+                        <label for="portSettingsInput">Port</label>
+                        <input type="number" name="" id="portSettingsInput" placeholder="1883">
+                    </div>
+                </div>
+
+
+                <button onclick="sendSettings();" anim="ripple" class="btn btn-primary">save</button>
+            </div>
+
+        
+        <script src="/scripts/main.js" async defer></script>
+        <script src="/scripts/ripple.js" async defer></script>
+    </body>
+</html>

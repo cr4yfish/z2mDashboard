@@ -1,0 +1,228 @@
+html, body {
+    background-color: #121212;
+    height: 100%;
+}
+
+h1, h2, a, label, .btn {
+    font-family: "Rubik Mono One", "sans-serif";
+    font-weight: 400;
+    color: white;
+    font-style: normal;
+}
+
+h1 {
+    background-color: #404040;
+    padding: .25rem 95% .25rem 5%;
+    border-radius: 3px;
+}
+
+a {
+    display: block;
+    background-color: #333333;
+    color: #C2C2C2;
+    padding: 0.5rem 1.5rem 0.5rem .5rem;
+    text-align: left;
+    text-decoration: none;
+    transition: all .35s;
+    margin: .5rem;
+    margin-bottom: 1.5rem;
+}
+
+a:hover {
+    background-color: #535353;
+    color: #e4e4e4;
+}
+
+a.active {
+    background-color: #C8AFD0;
+    color: #CA33E2;
+}
+
+/* ripple effect */
+
+[anim=ripple] {
+    position: relative;
+    overflow: hidden;
+}
+
+[anim=ripple]:before {
+    content: "";
+    position: absolute;
+    display: block;
+    background: var(--ripple-background, white);
+    border-radius: 50%;
+    pointer-events: none;
+    top: calc(var(--y) * 1px);
+    left: calc(var(--x) * 1px);
+    width: calc(var(--d) * 1px);
+    height: calc(var(--d) * 1px);
+    opacity: calc(var(--o, 1) * var(--ripple-opacity, 0.3));
+    transition: calc(var(--t, 0) * var(--ripple-duration, 600ms)) var(--ripple-easing, linear);
+    transform: translate(-50%, -50%) scale(var(--s, 1));
+    transform-origin: center;
+}
+
+
+
+
+
+header {
+    width: 90%;
+    height: 3rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: nowrap;
+    flex-direction: row;
+}
+
+#menuOpener, #menuClosener {
+    color: white;
+    font-size: 16pt;
+}
+
+#menuHeader {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+}
+
+#menuHeader, h2 {
+    margin: 0;
+}
+
+#menu {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 3;
+    top: 0;
+    right: 0;
+    background-color:#272727;
+    overflow-x: hidden;
+    padding-top: 60px;
+    transition: .5s;
+}
+
+
+/* settings */
+
+.content-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    height: 50%;
+}
+
+
+/* inputs */
+
+.input-wrapper {
+    display: flex;
+    background-color: white;
+    border-radius: 3px;
+    margin-bottom: 2rem;
+    height: fit-content;
+    padding: .15rem 2rem .5rem .25rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.input-wrapper input {
+    background-color: white;
+    outline: none;
+    font-size: 14pt;
+    border: none;
+}
+
+.input-wrapper label {
+    color: black;
+}
+
+/* buttons */
+
+.btn {
+    display: block;
+    padding: 1rem 3rem;
+    border-radius: 3px;
+    text-align: center;
+    outline: none;
+    border: none;
+    text-decoration: none;
+    -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}
+
+.btn:last-of-type {
+    margin-bottom: 0;
+}
+
+.btn-primary {
+    color: #CA33E2;
+    background-color: #C8AFD0;
+    --ripple-background: white;
+    --ripple-opacity: 0.3;
+    --ripple-duration: 600ms;
+}
+
+#lightSwitches .btn {
+    width: 100%;
+}
+
+
+.light-card {
+    height: 3rem;
+    margin-bottom: 1rem;
+}
+
+.light-card .card-body {
+    height: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    justify-content: flex-start;
+    margin-left: 1rem;
+    align-items: center;
+}
+
+/* slider */
+
+.noUi-handle {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.noUi-handle:after, .noUi-handle:before {
+    background: none !important;
+}
+
+.noUi-connect{
+    background: #ffffff3a !important;
+}
+
+.noUi-target {
+    background: transparent !important;
+    border: none !important; 
+    box-shadow: none !important;
+}
+
+.noUi-base, .noUi-connects {
+    top: 0;
+    position: absolute !important;
+}
+
+.noUi-horizontal .noUi-handle {
+    height: 75px !important;
+}
+
+.lightSlider, .noUi-horizontal, #testSlider {
+    height: 100% !important;
+}
