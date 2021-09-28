@@ -6,13 +6,37 @@
 
         <title>Scenes</title>
     </head>
-    <body>
-        <%- include("partials/menu.ejs"); %>
-        
-        <h1>Scenes</h1>
+    <body onload="getGroups();">
 
-        <button onclick="saveCurrentScene();" class="btn btn-primary">save current</button>
+
+        <div id="sceneSaver">
+
+            <div class="input-wrapper">
+                <label for="sceneNameInput">give it a name</label>
+                <input type="text" name="" id="sceneNameInput" placeholder="scene name" required>
+            </div>
+
+            <button id="sceneFinishBtn" onclick="saveCurrentScene(this);" anim="ripple" class="btn btn-primary">Done</button>
+            <button onclick="closeOverlay();" anim="ripple" class="btn btn-primary btn-abort">abort</button>
+            
+        </div>
+
+        <div id="colorOverlay" onclick="closeOverlay();"></div>
+
+
+        <div  anim="ripple" class="title">
+            <h1>Scenes</h1>
+            <%- include("partials/menu.ejs"); %>
+        </div>
+
+        <div id="groups">
+        </div>
+
+
+
         
         <script src="/scripts/main.js" async defer></script>
+        <script src="/scripts/ripple.js" async defer></script>
+        <script src="/scripts/scenes.js" async defer></script>
     </body>
 </html>

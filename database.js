@@ -2,7 +2,7 @@ console.log("Database module loaded")
 console.log("==========")
 
 const Datastore = require("@seald-io/nedb")
-
+const crypto = require("crypto")
 // databases:
 
 var db = {}
@@ -15,19 +15,17 @@ db.scenes.loadDatabase();
 // functions:
 
 // Saves current light config as a scene for the room
-const saveCurrentToScene = function(name, group) {
+const saveCurrentToScene = function(name, group, bri = 254) {
     console.log("saving current scene to database:");
     return new Promise((resolve, reject) => {
-        // 1. generate random id
-        let nameWithTimestamp = name + Date.now().toString();
-        const hash = crypto.createHash("sha256").update(nameWithTimestamp);
 
         // 2. get group to link to
         const doc = 
         {
-            "scene-name": name,
-            "scene-id": hash,
-            "group": group
+            "id": Math.floor(Math.random() * 200),
+            "sceneName": name,
+            "group": group,
+            "bri": bri
         }
 
         // 3. post document in db
@@ -52,7 +50,7 @@ const getAllScenes = function() {
         db.scenes.find({}, function(err, docs) {
             if(!err) {
                 console.log("===== DONE ====");
-                resolve(returnDoc);
+                resolve(docs);
             } else {
                 console(err);
                 reject(err);

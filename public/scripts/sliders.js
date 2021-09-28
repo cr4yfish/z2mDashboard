@@ -1,6 +1,6 @@
 
 // light sliders
-function makeSliders() {
+function makeSliders(set) {
     let lightSliders = document.querySelectorAll(".lightSlider");
 
     lightSliders.forEach(function (light) {
@@ -10,7 +10,7 @@ function makeSliders() {
             start: [0, 254],
             step: 1,
             connect: true,
-            behaviour: "tap-drag",
+            behaviour: "drag",
             range: {
                 'min': 0,
                 'max': 254
@@ -30,7 +30,11 @@ function makeSliders() {
             const options = {
                 method: "POST"
             }
-            fetch(url, options);
+            fetch(url, options)
+
+            .then(function(res) {
+                //refreshData(light.id);
+            })
         })
     
     
