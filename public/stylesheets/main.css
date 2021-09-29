@@ -191,7 +191,8 @@ a.active {
     height: 3rem;
     margin-bottom: 1rem;
     border-radius: 3px;
-    border: 1px solid rgba(255, 255, 255, 0.431);
+    border: 1px solid #ffffff3a;
+    overflow: visible;
 }
 
 .light-card .card-body {
@@ -206,6 +207,7 @@ a.active {
 }
 .card-body label{
     z-index: 5;
+    pointer-events: none;
 }
 
 /* slider */
@@ -226,6 +228,10 @@ a.active {
     background: #ffffff3a;
 }
 
+.noUi-connects {
+    overflow: visible !important;
+}
+
 .noUi-target {
     background: transparent !important;
     border: none !important; 
@@ -243,6 +249,10 @@ a.active {
 
 .lightSlider, .noUi-horizontal, #testSlider {
     height: 100% !important;
+}
+
+.lightSlider {
+    background-color: #e7e7e7 !important;
 }
 
 

@@ -120,7 +120,7 @@ app.post("/set/:name/:key/:value", (req, res) => {
 
     console.log(url, state);
 
-    client.publish(url, state, {qos: 1, retain: true} , function(err, packet) {
+    client.publish(url, state, {qos: 1, retain: false} , function(err, packet) {
         //console.log(err, packet);
         try {
             res.sendStatus(200);
@@ -310,7 +310,7 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
     let msg = `{"scene_recall": ${req.params.sceneId}}`
 
     // set scene
-    client.publish(url, msg, {qos: 1, retain: true} , function(err, packet) {
+    client.publish(url, msg, {qos: 1, retain: false} , function(err, packet) {
         //console.log(err, packet); 
         try {
             res.sendStatus(200);

@@ -25,7 +25,7 @@ function toggleLightState(friendlyName) {
 function getDataFromBridge(friendlyName) {
     
     const url = `${HOST}/getData/${friendlyName}`;
-
+    console.log("Getting data from bridge from:", url);
     fetch(url)
     .then(res => res.json())
 
@@ -80,17 +80,21 @@ function getDataFromBridge(friendlyName) {
 
                 if(color != undefined) {
                     sliderColor.style.background = `${color.hexString}`;
-                } else if(response.color_mode == "color_temp") {
-                    // light is in temperature color mode
-                    sliderColor.style.background = "#ffffff3a";
+                    //sliderColor.style.boxShadow = `0px 0px 30px ${color.hexString}`
+
                 } else {
                     // light is off or not reachable
                     sliderColor.style.background = "#ffffff3a";
-                    slider.noUiSlider.set([0,0]);
                 }
-            // change color of label
-            let label = document.querySelector(`#${friendlyName} label`)
-                label.style.color = invertColor(color.hexString);
+
+                // change color of label
+                let label = document.querySelector(`#${friendlyName} label`)
+
+                if(lightOrDark(color.hexString) == "light") {
+                    label.style.color = "black"
+                } else {
+                    label.style.color = "white"
+                }
         })
     })
 })();
@@ -133,7 +137,7 @@ function getGroups() {
                 lightcard.setAttribute("anim", "ripple");
 
                     let sliderContainer = document.createElement("div");
-                    sliderContainer.setAttribute("id", group);
+                        sliderContainer.setAttribute("id", group);
                         sliderContainer.setAttribute("class", "lightSlider");
                     lightcard.appendChild(sliderContainer);
 
@@ -171,7 +175,7 @@ async function refreshData(element = "all") {
         })
     } else {
         // only single element
-        elements = document.querySelector(`#${element}`);
+        elements = document.querySelector(`#${element}`).id;
         nameArray.push(elements);
     }
 
@@ -180,7 +184,7 @@ async function refreshData(element = "all") {
     for(let i = 0; i < nameArray.length; i++) {
         let group = nameArray[i]
         let url = `${HOST}/getData/${group}`
-
+        console.log("refreshing for", group, "data from", url)
         fetch(url)
         .then(res => res.json())
         .then(async function(response) {
@@ -196,18 +200,27 @@ async function refreshData(element = "all") {
             let sliderColor = slider.querySelector(".noUi-connect");
                 if(color != undefined) {
                     sliderColor.style.background = xyBriToRgb(color.x, color.y, brightness);
-                } else if(response.color_mode == "color_temp") {
-                    // light is in temperature color mode
-                    sliderColor.style.background = "#ffffff3a";
-                } else {
+                    //sliderColor.style.boxShadow = `0px 0px 30px ${xyBriToRgb(color.x, color.y, brightness)}`
+
+                } 
+                 else {
                     // light is off or not reachable
-                    sliderColor.style.background = "#ffffff3a";
-                    slider.noUiSlider.set([0,0]);
+                    sliderColor.style.background = "#ffffff";
                 }
+
+            // change color of label
+            let label = document.querySelector(`#${group} label`)
+
+            if(lightOrDark(document.getElementById(group).querySelector(".noUi-connect").style.background) == "light") {
+                label.style.color = "black"
+            } else {
+                label.style.color = "white"
+            }
+                
                 
             console.log("==== DONE =====")
         })
-        await sleep(500);
+        await sleep(250);
     }
 }
 
@@ -215,9 +228,7 @@ async function refreshData(element = "all") {
 async function serviceWorker() {
     console.log("service worker");
     refreshData();
-    await sleep(refreshTime*1000*2);
-    serviceWorker();
-
+    await sleep(refreshTime*1000*3);
 }
 
 function xyBriToRgb(x, y, bri)
@@ -265,4 +276,49 @@ function invertColor(inColor) {
     color = ("000000" + color).slice(-6);
     color = "#" + color;
     return color
+}
+
+// borrowed from awik.io
+function lightOrDark(color) {
+
+    // Variables for red, green, blue values
+    var r, g, b, hsp;
+    
+    // Check the format of the color, HEX or RGB?
+    if (color.match(/^rgb/)) {
+
+        // If RGB --> store the red, green, blue values in separate variables
+        color = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+        
+        r = color[1];
+        g = color[2];
+        b = color[3];
+    } 
+    else {
+        
+        // If hex --> Convert it to RGB: http://gist.github.com/983661
+        color = +("0x" + color.slice(1).replace( 
+        color.length < 5 && /./g, '$&$&'));
+
+        r = color >> 16;
+        g = color >> 8 & 255;
+        b = color & 255;
+    }
+    
+    // HSP (Highly Sensitive Poo) equation from http://alienryderflex.com/hsp.html
+    hsp = Math.sqrt(
+    0.299 * (r * r) +
+    0.587 * (g * g) +
+    0.114 * (b * b)
+    );
+
+    // Using the HSP value, determine whether the color is light or dark
+    if (hsp>127.5) {
+
+        return 'light';
+    } 
+    else {
+
+        return 'dark';
+    }
 }
