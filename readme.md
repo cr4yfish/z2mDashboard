@@ -1,5 +1,3 @@
-#z2m Dashboard
-
 # z2m Dashboard
 z2m Dashboard is an easy to use backend API with an own frontend for zigbee2mqtt.
 
@@ -71,7 +69,9 @@ pm2 save
 ### 5. Change the IP and Port in the frontend
 Steps:
 - Open the frontend
->http://[the same IP you typed in earlier]:3000
+```web
+http://[the same IP you typed in earlier]:3000
+```
 - Go to the settings tab by tapping the menu icon in the top right.
 - Change IP and PORT to your zigbee2Mqtt installation.
 (If Zigbee2Mqtt is running on the same device as z2mDashboard, the IP is the same as the one earlier. The PORT is most likely 1883)
