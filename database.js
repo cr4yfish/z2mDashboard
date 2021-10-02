@@ -2,7 +2,6 @@ console.log("Database module loaded")
 console.log("==========")
 
 const Datastore = require("@seald-io/nedb")
-const crypto = require("crypto")
 // databases:
 
 var db = {}
