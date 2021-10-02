@@ -63,8 +63,9 @@ function setScene(group, sceneId, bri=254) {
 function saveCurrentScene(buttonE) {
     console.log("saving current scene");
 
-    const sceneName = document.getElementById("sceneNameInput").value;
-    const sceneGroup = buttonE.dataset.friendlyname;
+    let sceneName = document.getElementById("sceneNameInput").value.replace("/","&");
+    // replace "/", otherwise API will get it wrong
+    let sceneGroup = buttonE.dataset.friendlyname;
     console.log(sceneName, sceneGroup);
     
 
@@ -74,7 +75,11 @@ function saveCurrentScene(buttonE) {
     .then(res => res.json())
     .then(function (response) {
         console.log(response)
-        const brightness = response.brightness;
+        let brightness = response.brightness;
+        
+        if(brightness == undefined) {
+            brightness = 254;
+        }
 
         // save scene
         url = `${HOST}/saveScene/${sceneName}/${sceneGroup}/${brightness}`

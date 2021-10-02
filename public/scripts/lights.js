@@ -152,11 +152,61 @@ function getGroups() {
             parent.prepend(lightcard);
         })
     })
-    .then(function () {
-        makeSliders();
-        setRipple();
-        serviceWorker();
+    // make lights
+    .then(function() {
+        console.log("Gettings devices data")
+
+        let url = `${HOST}/getData/bridge&devices`
+        fetch(url)
+        .then(data => data.json())
+
+        .then(function(data) {
+            console.log(data);
+
+            // sort out lights
+
+            let lights = [];
+
+            data.forEach(function(item) {
+                if (item.type != "Coordinator" && item.interview_completed == true && item.power_source != "Battery") {
+                    lights.push(item);
+                }
+            })
+
+            console.log(lights)
+
+            lights.forEach(function(light) {
+
+                const parent = document.getElementById("indivLights");
+
+
+                let lightBox = document.createElement("div")
+                    lightBox.setAttribute("class", "lightBox")
+                    lightBox.setAttribute("id", light.friendly_name)
+                    lightBox.setAttribute("onclick", "colorOverlay(this.id)")
+                    lightBox.setAttribute("anim", "ripple")
+                parent.appendChild(lightBox);
+
+                    let icon = document.createElement("i")
+                        icon.setAttribute("class", "fas fa-lightbulb")
+                    lightBox.appendChild(icon)
+
+                    let lightLabel = document.createElement("span")
+                        lightLabel.setAttribute("class", "lightBoxLabel")
+                        lightLabel.textContent = light.friendly_name
+                    lightBox.appendChild(lightLabel);
+            })
+
+        })
+
+        // finish setup
+        .then(function () {
+            makeSliders();
+            setRipple();
+            serviceWorker();
+        })
     })
+
 }
 
 async function refreshData(element = "all") {
@@ -229,6 +279,7 @@ async function serviceWorker() {
     console.log("service worker");
     refreshData();
     await sleep(refreshTime*1000*3);
+    //serviceWorker()
 }
 
 function xyBriToRgb(x, y, bri)

@@ -120,7 +120,7 @@ app.post("/set/:name/:key/:value", (req, res) => {
 
     console.log(url, state);
 
-    client.publish(url, state, {qos: 1, retain: false} , function(err, packet) {
+    client.publish(url, state , function(err, packet) {
         //console.log(err, packet);
         try {
             res.sendStatus(200);
@@ -218,7 +218,7 @@ app.get("/getData/:topic", (req, res) => {
     
             worker.on("message", function(topic, buffer, packet) {
                 let message = buffer.toString();
-                console.log("connected to", topic, message);
+                console.log("connected to", topic);
  
                 try {
                     res.send(JSON.parse(message));
@@ -310,7 +310,7 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
     let msg = `{"scene_recall": ${req.params.sceneId}}`
 
     // set scene
-    client.publish(url, msg, {qos: 1, retain: false} , function(err, packet) {
+    client.publish(url, msg, function(err, packet) {
         //console.log(err, packet); 
         try {
             res.sendStatus(200);
