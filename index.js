@@ -326,3 +326,19 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
 app.get("/update", (req, res) => {
     res.sendStatus(200);
 })
+
+app.post("/updateProgram", function(req, res) {
+    const { exec } = require('child_process');
+    exec('./update.sh', (err, stdout, stderr) => {
+    if (err) {
+        //some err occurred
+        console.error(err)
+        res.sendStatus(500);
+    } else {
+    // the *entire* stdout and stderr (buffered)
+    console.log(`stdout: ${stdout}`);
+    console.log(`stderr: ${stderr}`);
+    res.sendStatus(200);
+    }
+    });
+})

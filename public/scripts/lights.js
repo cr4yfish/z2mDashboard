@@ -79,12 +79,12 @@ function getDataFromBridge(friendlyName) {
             let sliderColor = slider.querySelector(".noUi-connect");
 
                 if(color != undefined) {
-                    sliderColor.style.background = `${color.hexString}`;
+                    //sliderColor.style.background = `${color.hexString}`;
                     //sliderColor.style.boxShadow = `0px 0px 30px ${color.hexString}`
 
                 } else {
                     // light is off or not reachable
-                    sliderColor.style.background = "#ffffff3a";
+                    //sliderColor.style.background = "#ffffff3a";
                 }
 
                 // change color of label
@@ -101,14 +101,21 @@ function getDataFromBridge(friendlyName) {
 
 
 function colorOverlay(id) {
-        document.getElementById("colorOverlay").style.display = "block"
-        document.getElementById("colorPicker").style.display = "flex"
-        document.getElementById("colorPickerLightName").textContent = id;
+    document.getElementById("colorOverlay").style.display = "block";
+    document.getElementById("colorPickerLightName").textContent = id;
 } 
 
+function colorPicker(id) {
+    document.getElementById("colorPicker").style.display = "flex";
+
+    colorOverlay(id);
+    
+}
+
 function closeOverlay() {
-    document.getElementById("colorOverlay").style.display = "none"
-    document.getElementById("colorPicker").style.display = "none"
+    document.getElementById("colorOverlay").style.display = "none";
+    document.getElementById("colorPicker").style.display = "none";
+    document.getElementById("sceneSaver").style.display = "none";
 
     try {
         document.getElementById("menu").style.width = "0";
@@ -133,7 +140,7 @@ function getGroups() {
             let lightcard = document.createElement("div");
                 lightcard.setAttribute("id", group);
                 lightcard.setAttribute("class", "card light-card");
-                lightcard.setAttribute("onclick", "colorOverlay(this.id);")
+                lightcard.setAttribute("onclick", "colorPicker(this.id);")
                 lightcard.setAttribute("anim", "ripple");
 
                     let sliderContainer = document.createElement("div");
@@ -148,6 +155,10 @@ function getGroups() {
                             let label = document.createElement("label");
                                 label.textContent = group;
                             cardBody.appendChild(label);
+
+                            let state = document.createElement("i");
+                                state.setAttribute("class", "fas fa-power-off");
+                            cardBody.appendChild(state);
 
             parent.prepend(lightcard);
         })
@@ -168,22 +179,29 @@ function getGroups() {
             let lights = [];
 
             data.forEach(function(item) {
-                if (item.type != "Coordinator" && item.interview_completed == true && item.power_source != "Battery") {
-                    lights.push(item);
+                try {
+                    if (item.definition.exposes[0].type == "light") {
+                        lights.push(item);
+                    }
+                }
+                catch (e) {
+                    //console.log(e);
                 }
             })
 
-            console.log(lights)
+            console.log(lights);
+
+            const parent = document.querySelector("#lastUsed .swiper-wrapper");
 
             lights.forEach(function(light) {
 
-                const parent = document.getElementById("lastUsed");
-
-
                 let lightBox = document.createElement("div")
-                    lightBox.setAttribute("class", "lightBox")
+                    lightBox.setAttribute("class", "lightBox swiper-slide")
                     lightBox.setAttribute("id", light.friendly_name)
-                    lightBox.setAttribute("onclick", "colorOverlay(this.id)")
+
+                    //lightBox.setAttribute("onclick", "colorOverlay(this.id)");
+                    lightBox.setAttribute("onclick", "toggleLightState(this.id)");
+
                     lightBox.setAttribute("anim", "ripple")
                 parent.appendChild(lightBox);
 
@@ -201,12 +219,26 @@ function getGroups() {
 
         // finish setup
         .then(function () {
+            makeSwiper();
             makeSliders();
             setRipple();
+            dashboardScene()
             serviceWorker();
         })
     })
+}
 
+
+
+function makeSwiper() {
+    const swiper = new Swiper('.swiper', {
+        direction: "horizontal",
+        loop: false,
+
+        scrollbar: {
+            el: ".swiper-scrollbar",
+        },
+    });
 }
 
 async function refreshData(element = "all") {
@@ -249,13 +281,13 @@ async function refreshData(element = "all") {
             // change color of slider
             let sliderColor = slider.querySelector(".noUi-connect");
                 if(color != undefined) {
-                    sliderColor.style.background = xyBriToRgb(color.x, color.y, brightness);
+                    //sliderColor.style.background = xyBriToRgb(color.x, color.y, brightness);
                     //sliderColor.style.boxShadow = `0px 0px 30px ${xyBriToRgb(color.x, color.y, brightness)}`
 
                 } 
                  else {
                     // light is off or not reachable
-                    sliderColor.style.background = "#ffffff";
+                    //sliderColor.style.background = "#ffffff";
                 }
 
             // change color of label

@@ -13,10 +13,29 @@
         <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
 
         <title>Lights</title>
+
+        <link
+        rel="stylesheet"
+        href="https://unpkg.com/swiper@7/swiper-bundle.min.css"
+        />
+
+        <script src="https://unpkg.com/swiper@7/swiper-bundle.min.js"></script>
+
     </head>
 
     <body onload="getGroups();">
 
+        <div id="sceneSaver">
+
+            <div class="input-wrapper">
+                <label for="sceneNameInput">give it a name</label>
+                <input type="text" name="" id="sceneNameInput" placeholder="scene name" required>
+            </div>
+
+            <button id="sceneFinishBtn" onclick="saveCurrentScene(this);" anim="ripple" class="btn btn-primary">Done</button>
+            <button onclick="closeSceneOverlay();" anim="ripple" class="btn btn-primary btn-abort">Abort</button>
+            
+        </div>
 
         <div id="colorPicker">
             <h2 id="colorPickerLightName">Light_name</h2>
@@ -27,18 +46,28 @@
 
         <div id="colorOverlay" onclick="closeOverlay();"></div>
 
-        
-
-        <div  anim="ripple" class="title">
-            <h1>Lights</h1>
+        <div class="title">
+            <h1>Dashboard</h1>
             <%- include("partials/menu.ejs"); %>
         </div>
 
 
-        <div id="lastUsed"></div>
+        <h1 class="sectionHeader">last used</h1>
+        <div id="lastUsed" class="swiper">
+            <div class="swiper-wrapper"></div>
+            <div class="swiper-scrollbar"></div>
+        </div>
+
+        <h1 class="sectionHeader">Groups</h1>
         <div id="groups"></div>
+
+        <h1 class="sectionHeader">Scenes 
+            <button class="btn btn-primary" anim="ripple" onclick="sceneOverlay(this)" data-friendlyname="all" >Save Current</button>
+        </h1>
         <div id="scenes"></div>
 
+
+        <script src="/scripts/scenes.js" async defer></script>
         <script src="/scripts/sliders.js" async defer></script>
         <script src="/scripts/main.js"  async defer></script>
         <script src="/scripts/lights.js" async defer></script>

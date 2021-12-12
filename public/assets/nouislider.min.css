@@ -125,8 +125,9 @@
     border-radius: 3px
 }
 
+/* default slider foreground */
 .noUi-connect {
-    background: #404040
+    background: #ffffff25;
 }
 
 .noUi-draggable {

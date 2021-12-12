@@ -59,10 +59,7 @@ a.active {
     transform-origin: center;
 }
 
-
-
 .title {
-    background-color: #404040;
     border-radius: 3px;
     display: flex;
     width: 100%;
@@ -70,16 +67,29 @@ a.active {
     align-items: baseline;
     padding: 1rem 0rem;
     margin-bottom: 2rem;
+    font-size: 9pt;
 }
 
 .title h1 {
-    width: fit-content;
+    width: 100%;
     margin: 0;
+    text-align: center;
+}
+
+.sectionHeader {
+    font-size: 14pt;
+    margin-left: 2rem;
+}
+
+#menuOpener {
+    transform: translateX(-2rem);
 }
 
 #menuOpener, #menuClosener {
+    padding-top: 10px;
     color: white;
     font-size: 2em;
+    cursor: pointer;
 }
 
 #menuHeader {
@@ -102,7 +112,7 @@ a.active {
     right: 0;
     background-color:#272727;
     overflow-x: hidden;
-    padding-top: 60px;
+    padding-top: 10px;
     transition: .5s;
 }
 
@@ -203,7 +213,7 @@ a.active {
     background-color: rgb(207, 109, 109);
 }
 
-#groups {
+#groups, #scenes {
     width: 90%;
     margin-left: 50%;
     transform: translateX(-50%);
@@ -215,10 +225,9 @@ a.active {
 
 
 .light-card {
-    height: 3rem;
+    height: 6rem;
     margin-bottom: 1rem;
-    border-radius: 3px;
-    border: 1px solid #ffffff3a;
+    border-radius: 6px;
     overflow: visible;
 }
 
@@ -226,15 +235,43 @@ a.active {
     height: 100%;
     text-align: center;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-content: center;
-    justify-content: flex-start;
+    justify-content: center;
     margin-left: 1rem;
-    align-items: center;
+    align-items: flex-start;
 }
-.card-body label{
+
+.card-body label {
     z-index: 5;
     pointer-events: none;
+}
+
+.card-body i {
+    z-index: 5;
+    font-size: 14pt;
+    margin-top: .5rem;
+    cursor: pointer;
+    padding: .5rem;
+    border-radius: 9px;
+    color: rgba(0, 0, 0, 0.459);
+    background-color: rgba(255, 255, 255, 0.164);
+
+}
+
+
+#scenes {
+    display: flex;
+    flex-direction: row;
+
+}
+
+#scenes .sceneBox:first-of-type {
+    margin-left: 0;
+}
+
+#scenes .sceneBox:last-of-type {
+    margin-right: 0;
 }
 
 /* slider */
@@ -276,7 +313,7 @@ a.active {
 }
 
 .lightSlider {
-    background-color: #1d1d1d !important;
+    background-color: #333333 !important;
 }
 
 
@@ -291,6 +328,7 @@ a.active {
     left: 0;
     z-index: 2;
     display: none;
+    cursor: pointer;
 }
 
 #colorPicker {
@@ -373,23 +411,28 @@ a.active {
     justify-content: center;
     flex-direction: row;
     flex-wrap: wrap;
-    margin-top: 3rem;
+    margin-top: 1rem;
+    width: 90%;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 2rem;
 }
 
 .lightBox {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
     flex-direction: column;
     cursor: pointer;
     background-color: #333333;
-    padding: .25rem;
+    padding: .5rem;
     width: 5rem;
     height: 5rem;
     word-break: break-all;
     border-radius: 6px;
     margin-bottom: .5rem;
-    margin-right: .5rem;
+    margin-right: 1rem;
 }
 
 .lightBox:last-of-type {
@@ -398,10 +441,15 @@ a.active {
 
 .lightBox span, .lightBox i  {
     color: white;
-    text-align: center;
-    font-size: 14pt;
+    font-size: 10pt;
 }
 
+
+/* fix swiper */
+.swiper-slide {
+    width: 5rem !important;
+    height: 5rem !important;
+}
 
 /* notice banner */
 

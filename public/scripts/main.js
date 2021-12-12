@@ -1,5 +1,3 @@
-
-
 (function whereAmI() {
     const anchors = document.querySelectorAll("#menu a");
     anchors.forEach(function(anchor) {
@@ -30,6 +28,7 @@ function closeMenu() {
         console.log(e);
     }
 }
+
 const HOST = 'http://localhost:30000'
 //const HOST = 'http://192.168.0.100:30000'
 
