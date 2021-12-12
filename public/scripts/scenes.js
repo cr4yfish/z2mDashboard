@@ -127,11 +127,15 @@ function makeSceneBox(parent, scene) {
     console.log("=== MAKING SCENE BOX ===");
 
         let box = document.createElement("div");
-            box.setAttribute("class", "sceneBox");
+            box.setAttribute("class", "lightBox sceneBox swiper-slide");
             box.setAttribute("onclick", `setScene("${scene.group}", "${scene.id}")`);
             box.setAttribute("anim", "ripple");
-        
-            let label = document.createElement("h3");
+
+            let icon = document.createElement("i");
+                icon.setAttribute("class", "fas fa-play")
+            box.appendChild(icon);
+
+            let label = document.createElement("span");
                 label.textContent = scene.sceneName;
             box.appendChild(label);
 
@@ -152,7 +156,7 @@ function groupScene() {
 function dashboardScene() {
     getScenes().then(function(scenes) {
         scenes.forEach(function(scene) {
-            let parent = document.getElementById("scenes");
+            let parent = document.querySelector("#scenes .swiper-wrapper");
             makeSceneBox(parent, scene);
         })
     })

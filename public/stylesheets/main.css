@@ -389,7 +389,7 @@ a.active {
     flex-direction: row;
     flex-wrap: wrap;
 }
-
+/*
 .sceneBox {
     width: fit-content;
     height: fit-content;
@@ -403,7 +403,7 @@ a.active {
 .sceneBox h3 {
     color: rgb(255, 255, 255);
     margin: 0;
-}
+}*/
 
 
 #lastUsed {
