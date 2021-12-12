@@ -117,6 +117,32 @@ a.active {
     height: 50%;
 }
 
+/* theme color selection */
+.themeColorOption {
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+    margin-right: .5rem;
+}
+
+.themeColorOption:last-of-type {
+    margin-right: 0;
+}
+
+.themeColorOption #pink {
+    background-color: "#CA33E2";
+}
+.themeColorOption #blue {
+    background-color: "#5ACAE2";
+}
+.themeColorOption #green {
+    background-color: "#6BE233";
+}
+
+.themeColorOption .selected {
+    box-shadow: 0 0 10px whitesmoke;
+}
+
 
 /* inputs */
 
@@ -177,13 +203,13 @@ a.active {
     background-color: rgb(207, 109, 109);
 }
 
-#lightSwitches {
+#groups {
     width: 90%;
     margin-left: 50%;
     transform: translateX(-50%);
 }
 
-#lightSwitches .btn {
+#groups .btn {
     width: 100%;
 }
 
@@ -342,7 +368,7 @@ a.active {
 }
 
 
-#indivLights {
+#lastUsed {
     display: flex;
     justify-content: center;
     flex-direction: row;
@@ -356,12 +382,12 @@ a.active {
     justify-content: center;
     flex-direction: column;
     cursor: pointer;
-    background-color: #404040;
+    background-color: #333333;
     padding: .25rem;
     width: 5rem;
     height: 5rem;
     word-break: break-all;
-    border-radius: 3px;
+    border-radius: 6px;
     margin-bottom: .5rem;
     margin-right: .5rem;
 }
@@ -374,4 +400,38 @@ a.active {
     color: white;
     text-align: center;
     font-size: 14pt;
+}
+
+
+/* notice banner */
+
+.banner {
+    width: 75%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* positive banner */
+.banner .banner-positive {
+    background-color: #B3DFB2;
+    color: black;
+}
+
+.banner span {
+    color: inherit;
+}
+
+.banner .banner-positive .fas {
+    color: #3B533B;
+}
+
+/* negative banner */
+.banner .banner-negative {
+    background-color: #DFB2B2;
+    color: black;
+}
+
+.banner .banner-negative .fas {
+    color: #6C4F4F;
 }

@@ -321,3 +321,8 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
         console.log("======== DONE ========")
     })
 })
+
+// updates program
+app.get("/update", (req, res) => {
+    res.sendStatus(200);
+})

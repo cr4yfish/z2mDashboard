@@ -128,7 +128,7 @@ function getGroups() {
 
         groups.forEach(function(group) {
             refreshTime++
-            const parent = document.getElementById("lightSwitches");
+            const parent = document.getElementById("groups");
  
             let lightcard = document.createElement("div");
                 lightcard.setAttribute("id", group);
@@ -177,7 +177,7 @@ function getGroups() {
 
             lights.forEach(function(light) {
 
-                const parent = document.getElementById("indivLights");
+                const parent = document.getElementById("lastUsed");
 
 
                 let lightBox = document.createElement("div")

@@ -31,6 +31,22 @@
                         <label for="portSettingsInput">Port</label>
                         <input type="number" name="" id="portSettingsInput" placeholder="1883">
                     </div>
+    
+                    <div class="input-wrapper">
+                        <label for="versionSettingsInput">Version</label>
+                        <input type="number" name="" id="versionSettingsInput" placeholder="0.0">
+                    </div>
+
+                    <button onclick="checkUpdates()" anim="ripple" class="btn btn-neutral"></button>
+    
+                    <div class="input-wrapper">
+                        <label for="themeColorSettingsInput">Theme color</label>
+                        <div>
+                            <div onclick="selectThemeColor(this);" class="themeColorOption selected" id="pink"></div>
+                            <div onclick="selectThemeColor(this);" class="themeColorOption" id="blue"></div>
+                            <div onclick="selectThemeColor(this);" class="themeColorOption" id="green"></div>
+                        </div>
+                    </div>
                 </div>
 
 

@@ -1,0 +1,8 @@
+#TODO
+
+- Find last used lights somehow
+    + Maybe make a local copy or log uses in a database
+
+- Implement the redesign
+
+- Implement theme switching 
