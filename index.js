@@ -79,6 +79,7 @@ app.get("/home", (req, res) => {
 app.get("/scenes", (req, res) => {
     res.render("scenes.ejs", {})
 })
+
 app.get("/automation", (req, res) => {
     res.render("automation.ejs", {})
 })
@@ -108,7 +109,6 @@ app.post("/set/:name/:key/:value", (req, res) => {
     {
        // value is a string
        state = `{"${req.params.key}": "${value}"}`
-     
     } 
     else 
     {
@@ -137,7 +137,7 @@ let groups = [];
 
 // get groups
 app.get("/getGroups", (req, res) => {
-    console.log("Gettings groups");
+    console.log("Getting groups");
 
     if(groups.length > 0) {
         console.log("using cache");
@@ -196,7 +196,7 @@ app.get("/getGroups", (req, res) => {
 
 // gets data from bridge
 app.get("/getData/:topic", (req, res) => {
-
+    console.log("Getting data from topic");
     let topicsArray = req.params.topic.split("&");
     //console.log(topicsArray);
 
@@ -211,28 +211,30 @@ app.get("/getData/:topic", (req, res) => {
         worker.subscribe(url, function(err, granted) {   
             
             if(granted == undefined || err) {
+                console.log("Error at getData/", topic, "Err or not granted");
                 console.log(err);
-            } else {
-                //console.log(granted);  
             }
     
-            worker.on("message", function(topic, buffer, packet) {
-                let message = buffer.toString();
+            worker.on("message", function(resTopic, buffer, packet) {
+                let message = JSON.parse(buffer.toString());
                 console.log("connected to", topic);
- 
+
+                worker.unsubscribe(topic);
+
                 try {
-                    res.send(JSON.parse(message));
+                    res.send(message);
+                    console.log("Sent message");
                 }
                 catch (err) {
+                    console.log("Error at getData/", topic, "message could not be sent");
                     console.log(err);
                 }
+                
+                //worker.end();
                 console.log("====== DONE =======");
-                worker.unsubscribe(topic);
-                worker.end();
             })
         })
     })
-
 })
 
 // writes new data to configfile

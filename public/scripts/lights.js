@@ -140,8 +140,6 @@ function getGroups() {
             let lightcard = document.createElement("div");
                 lightcard.setAttribute("id", group);
                 lightcard.setAttribute("class", "card light-card");
-                lightcard.setAttribute("onclick", "colorPicker(this.id);")
-                lightcard.setAttribute("anim", "ripple");
 
                     let sliderContainer = document.createElement("div");
                         sliderContainer.setAttribute("id", group);
@@ -156,9 +154,19 @@ function getGroups() {
                                 label.textContent = group;
                             cardBody.appendChild(label);
 
-                            let state = document.createElement("i");
-                                state.setAttribute("class", "fas fa-power-off");
-                            cardBody.appendChild(state);
+                            let extraStateDiv = document.createElement("div");
+                                extraStateDiv.setAttribute("class", "extraStateDiv");
+                            cardBody.appendChild(extraStateDiv);
+
+                                let state = document.createElement("i");
+                                    state.setAttribute("class", "fas fa-power-off");
+                                    state.setAttribute("onclick", `toggleLightState("${group}")`)
+                                extraStateDiv.appendChild(state);
+
+                                let color = document.createElement("i");
+                                    color.setAttribute("class", "fas fa-eye-dropper")
+                                    color.setAttribute("onclick", `colorPicker("${group}")`)
+                                extraStateDiv.appendChild(color);
 
             parent.prepend(lightcard);
         })
@@ -235,9 +243,7 @@ function makeSwiper() {
         direction: "horizontal",
         loop: false,
 
-        scrollbar: {
-            el: ".swiper-scrollbar",
-        },
+        
     });
 }
 
@@ -264,9 +270,9 @@ async function refreshData(element = "all") {
 
 
     for(let i = 0; i < nameArray.length; i++) {
-        let group = nameArray[i]
-        let url = `${HOST}/getData/${group}`
-        console.log("refreshing for", group, "data from", url)
+        let group = nameArray[i];
+        let url = `${HOST}/getData/${group}`;
+        console.log("refreshing for", group, "data from", url);
         fetch(url)
         .then(res => res.json())
         .then(async function(response) {
@@ -302,7 +308,7 @@ async function refreshData(element = "all") {
                 
             console.log("==== DONE =====")
         })
-        await sleep(250);
+        await sleep(1000);
     }
 }
 
@@ -310,7 +316,7 @@ async function refreshData(element = "all") {
 async function serviceWorker() {
     console.log("service worker");
     refreshData();
-    await sleep(refreshTime*1000*3);
+    //await sleep(refreshTime*1000*3);
     //serviceWorker()
 }
 

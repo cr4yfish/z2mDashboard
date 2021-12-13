@@ -17,12 +17,16 @@ a {
     display: block;
     background-color: #333333;
     color: #C2C2C2;
-    padding: 0.5rem 1.5rem 0.5rem .5rem;
-    text-align: left;
+    padding: 0.25rem 0.5rem;
     text-decoration: none;
+    border-radius: 9px;
     transition: all .35s;
     margin: .5rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 2rem;
 }
 
 a:hover {
@@ -253,10 +257,22 @@ a.active {
     margin-top: .5rem;
     cursor: pointer;
     padding: .5rem;
-    border-radius: 9px;
+    border-radius: 53px;
     color: rgba(0, 0, 0, 0.459);
     background-color: rgba(255, 255, 255, 0.164);
 
+}
+
+.extraStateDiv {
+    display: flex;
+    flex-direction: row;
+}
+.extraStateDiv * {
+    margin-right: 1rem;
+}
+
+.extraStateDiv:last-child {
+    margin-right: 0;
 }
 
 

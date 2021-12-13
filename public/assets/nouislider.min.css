@@ -128,6 +128,7 @@
 /* default slider foreground */
 .noUi-connect {
     background: #ffffff25;
+    
 }
 
 .noUi-draggable {
@@ -135,7 +136,11 @@
 }
 
 .noUi-vertical .noUi-draggable {
-    cursor: ns-resize
+    cursor: pointer;
+}
+
+.noUi-connect, .lightSlider {
+    border-radius: 9px;
 }
 
 .noUi-handle {

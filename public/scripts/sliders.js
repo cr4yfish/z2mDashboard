@@ -10,7 +10,7 @@ function makeSliders(set) {
             start: [0, 254],
             step: 1,
             connect: true,
-            behaviour: "drag",
+            behaviour: "tap-drag",
             range: {
                 'min': 0,
                 'max': 254
@@ -21,7 +21,8 @@ function makeSliders(set) {
         origins[0].setAttribute('disabled', true);
     
     
-        light.noUiSlider.on("end", function( values, handle) {
+        light.noUiSlider.on("set", function( values, handle) {
+            console.log("Changing brightness for", light);
             let value = parseInt(values[1])
             console.log(light.getAttribute("id"))
             //let url = HOST+"/set/"+ light.getAttribute("id") +"/"+value+"/brightness";
