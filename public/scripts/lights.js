@@ -1,3 +1,5 @@
+
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -168,6 +170,11 @@ function getGroups() {
                                     color.setAttribute("onclick", `colorPicker("${group}")`)
                                 extraStateDiv.appendChild(color);
 
+                                let openGroup = document.createElement("i");
+                                    openGroup.setAttribute("class", "fas ellipsis-v");
+                                    openGroup.setAttribute("onclick", `openGroup(${group})`);
+                                extraStateDiv.appendChild(openGroup);
+
             parent.prepend(lightcard);
         })
     })
@@ -237,6 +244,113 @@ function getGroups() {
 }
 
 
+function openGroup(friendlyName) {
+    console.log("Opening group screen");
+
+    document.getElementById("GroupScreen").querySelector(".GroupScreenTitle h2").textContent = friendlyName;
+    document.getElementById("GroupScreen").querySelector(".saveSceneBtn").dataset.friendlyname = friendlyName;
+
+    const devices = document.getElementById("GroupScreenLights");
+    const scenes = document.getElementById("GroupScreenScenes");
+
+    getGroupData(friendlyName).then(function(group) {
+        group.members.forEach(member => {
+            devices.appendChild(makeLightSlider(member.friendly_name));
+        })
+
+        group.scenes.forEach(scene => {
+            scenes.appendChild(makeLightBox(scene.name, `setScene(${friendlyname}, ${scene.id})`));
+        })
+    })
+
+}
+
+function makeLightBox(friendlyName, action, icon = "fa-lightbulb") {
+
+    let lightBox = document.createElement("div");
+    lightBox.setAttribute("class", "lightBox swiper-slide");
+    lightBox.setAttribute("id", friendlyName);
+
+    lightBox.setAttribute("onclick", `${action}`);
+
+    lightBox.setAttribute("anim", "ripple");
+
+    let iconEle = document.createElement("i");
+        iconEle.setAttribute("class", `fas ${icon}`);
+    lightBox.appendChild(iconEle);
+
+    let lightLabel = document.createElement("span");
+        lightLabel.setAttribute("class", "lightBoxLabel");
+        lightLabel.textContent = friendlyName;
+    lightBox.appendChild(lightLabel);
+
+    let lightSettings = document.createElement("i");
+        lightSettings.setAttribute("class", "fas fa-ellipsis-v");
+        lightSettings.setAttribute("onclick", `colorPicker(${friendlyName})`);
+    lightBox.appendChild(lightSettings);
+
+    return lightBox;
+}
+
+
+function makeLightSlider(friendlyName, icon = "") {
+ 
+    let lightcard = document.createElement("div");
+        lightcard.setAttribute("id", friendlyName);
+        lightcard.setAttribute("class", "card light-card");
+
+            let sliderContainer = document.createElement("div");
+                sliderContainer.setAttribute("id", friendlyName);
+                sliderContainer.setAttribute("class", "lightSlider");
+            lightcard.appendChild(sliderContainer);
+
+                let cardBody = document.createElement("div");
+                    cardBody.setAttribute("class", "card-body");
+                sliderContainer.appendChild(cardBody);
+
+                    let label = document.createElement("label");
+                        label.textContent = friendlyName;
+                    cardBody.appendChild(label);
+
+                    let extraStateDiv = document.createElement("div");
+                        extraStateDiv.setAttribute("class", "extraStateDiv");
+                    cardBody.appendChild(extraStateDiv);
+
+                        let state = document.createElement("i");
+                            state.setAttribute("class", "fas fa-power-off");
+                            state.setAttribute("onclick", `toggleLightState("${friendlyName}")`)
+                        extraStateDiv.appendChild(state);
+
+                        let color = document.createElement("i");
+                            color.setAttribute("class", "fas fa-eye-dropper")
+                            color.setAttribute("onclick", `colorPicker("${friendlyName}")`)
+                        extraStateDiv.appendChild(color);       
+
+    return lightcard;
+}
+
+function getGroupData(groupFriendlyName) {
+    return new Promise((resolve, reject) => {
+        const url = `${HOST}/getData/bridge&groups`;
+        
+        fetch(url).then(res => res.json())
+        .then(function(res) {
+            let Group = { };
+            res.forEach(function(group) {
+                if(group.friendly_name == groupFriendlyName) {
+                    Group = {
+                        friendlyName: group.friendly_name,
+                        scenes: group.scenes,
+                        members: group.members,
+                    }
+                    break;
+                }
+            })
+
+            resolve(Group);
+        })
+    })
+}
 
 function makeSwiper() {
     const swiper = new Swiper('.swiper', {
