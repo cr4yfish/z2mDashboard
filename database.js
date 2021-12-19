@@ -9,9 +9,7 @@ var db = {}
 db.scenes = new Datastore({ filename: "./database/scenes.db", autoload: true})
 db.scenes.loadDatabase();
 
-
-
-// functions:
+// scene functions:
 
 // Saves current light config as a scene for the room
 const saveCurrentToScene = function(name, group, bri = 254) {
@@ -58,5 +56,58 @@ const getAllScenes = function() {
     })
 }
 
+
 exports.getAllScenes = getAllScenes;
 exports.saveCurrentToScene = saveCurrentToScene;
+
+
+
+db.mirror = new Datastore({
+    filename: "./database/mirror.db", autoload: true,
+})
+db.mirror.loadDatabase();
+
+
+// mirror functions
+
+// inserts new mirror, automatic stimestamping
+const makeNewMirror = function(state) {
+    return new Promise((resolve, reject) => {
+        const doc = {
+            timestamp: Date.now().toString(),
+            state: state,
+        }
+
+        db.mirror.insert(doc, function(err, savedDocs) {
+            if(err) {
+                console.error(doc, err);
+            }
+            resolve(savedDocs);
+        })
+    })
+}
+
+
+// retrieves all mirrors, or mirror by timestam, if param set
+const getMirrors = function(reqTimeStamp = 0) {
+    return new Promise((resolve, reject) => {
+
+        // only searches all if no timeStamp param has been given
+        let findObj = { };
+        if(reqTimeStamp != 0) {
+            findObj  = {
+                timestamp: reqTimeStamp,
+            }
+        }
+
+        db.mirror.find(findObj, function(err, docs) {
+            if(err) {
+                console.err(err);
+            }
+            resolve(docs);
+        })
+    })
+}
+
+exports.makeNewMirror = makeNewMirror;
+exports.getMirrors = getMirrors;

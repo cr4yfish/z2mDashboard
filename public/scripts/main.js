@@ -29,8 +29,8 @@ function closeMenu() {
     }
 }
 
-const HOST = 'http://localhost:30000'
-//const HOST = 'http://192.168.0.100:30000'
+//const HOST = 'http://localhost:30000'
+const HOST = 'http://192.168.1.105:30000'
 
 
 function makeNotice(str, state) {
@@ -70,3 +70,9 @@ function makeNotice(str, state) {
 function hideObject() {
     this.remove();
 }
+
+// debugging convinience
+
+const lastUsedParent = document.querySelector("#lastUsed .swiper-wrapper")
+const lightSliderParent = document.getElementById("groups");
+const sceneParent = document.querySelector("#scenes .swiper-wrapper");

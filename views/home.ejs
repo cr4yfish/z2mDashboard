@@ -45,21 +45,24 @@
         </div>
 
         <div id="GroupScreen">
-            <div class="GroupScreenTitle">
+
+            <div class="title GroupScreenTitle">
                 <h2>Group_name</h2>
-
-                <h1>Devices</h1>
-                <div id="GroupScreenLights">
-
-                </div>
-
-                <h1 class="sectionHeader">Scenes 
-                    <button class="btn btn-primary saveSceneBtn" anim="ripple" onclick="sceneOverlay(this)" data-friendlyname="all" >Save Current</button>
-                </h1>
-                <div id="GroupScreenScenes">
-
-                </div>
+                <i onclick="closeGroup();" id="groupScreenClosener" class="fas fa-times"></i>
             </div>
+               
+            <h1 class="sectionHeader">Devices</h1>
+            <div id="GroupScreenLights">
+            </div>
+
+            <h1 class="sectionHeader">Scenes
+                <button class="btn btn-primary saveSceneBtn" anim="ripple" onclick="sceneOverlay(this)" data-friendlyname="all" >Save Current</button>
+            </h1>
+           
+            <div id="GroupScreenScenes" class="swiper">
+                <div class="swiper-wrapper"></div>
+            </div>
+           
         </div>
 
         <div id="colorOverlay" onclick="closeOverlay();"></div>

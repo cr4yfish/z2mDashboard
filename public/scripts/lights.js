@@ -104,13 +104,13 @@ function getDataFromBridge(friendlyName) {
 
 function colorOverlay(id) {
     document.getElementById("colorOverlay").style.display = "block";
-    document.getElementById("colorPickerLightName").textContent = id;
 } 
 
 function colorPicker(id) {
     document.getElementById("colorPicker").style.display = "flex";
+    document.getElementById("colorPickerLightName").textContent = id;
 
-    colorOverlay(id);
+    colorOverlay();
     
 }
 
@@ -138,44 +138,10 @@ function getGroups() {
         groups.forEach(function(group) {
             refreshTime++
             const parent = document.getElementById("groups");
- 
-            let lightcard = document.createElement("div");
-                lightcard.setAttribute("id", group);
-                lightcard.setAttribute("class", "card light-card");
+            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
-                    let sliderContainer = document.createElement("div");
-                        sliderContainer.setAttribute("id", group);
-                        sliderContainer.setAttribute("class", "lightSlider");
-                    lightcard.appendChild(sliderContainer);
-
-                        let cardBody = document.createElement("div");
-                            cardBody.setAttribute("class", "card-body");
-                        sliderContainer.appendChild(cardBody);
-
-                            let label = document.createElement("label");
-                                label.textContent = group;
-                            cardBody.appendChild(label);
-
-                            let extraStateDiv = document.createElement("div");
-                                extraStateDiv.setAttribute("class", "extraStateDiv");
-                            cardBody.appendChild(extraStateDiv);
-
-                                let state = document.createElement("i");
-                                    state.setAttribute("class", "fas fa-power-off");
-                                    state.setAttribute("onclick", `toggleLightState("${group}")`)
-                                extraStateDiv.appendChild(state);
-
-                                let color = document.createElement("i");
-                                    color.setAttribute("class", "fas fa-eye-dropper")
-                                    color.setAttribute("onclick", `colorPicker("${group}")`)
-                                extraStateDiv.appendChild(color);
-
-                                let openGroup = document.createElement("i");
-                                    openGroup.setAttribute("class", "fas ellipsis-v");
-                                    openGroup.setAttribute("onclick", `openGroup(${group})`);
-                                extraStateDiv.appendChild(openGroup);
-
-            parent.prepend(lightcard);
+            parent.appendChild(makeLightSlider(group, {state: true, color: randomColor, openGroup: true}));
+            
         })
     })
     // make lights
@@ -210,24 +176,9 @@ function getGroups() {
 
             lights.forEach(function(light) {
 
-                let lightBox = document.createElement("div")
-                    lightBox.setAttribute("class", "lightBox swiper-slide")
-                    lightBox.setAttribute("id", light.friendly_name)
-
-                    //lightBox.setAttribute("onclick", "colorOverlay(this.id)");
-                    lightBox.setAttribute("onclick", "toggleLightState(this.id)");
-
-                    lightBox.setAttribute("anim", "ripple")
-                parent.appendChild(lightBox);
-
-                    let icon = document.createElement("i")
-                        icon.setAttribute("class", "fas fa-lightbulb")
-                    lightBox.appendChild(icon)
-
-                    let lightLabel = document.createElement("span")
-                        lightLabel.setAttribute("class", "lightBoxLabel")
-                        lightLabel.textContent = light.friendly_name
-                    lightBox.appendChild(lightLabel);
+                parent.appendChild(makeLightBox(light, {action: "toggleLightState(this.id)" }));
+                
+              
             })
 
         })
@@ -245,55 +196,91 @@ function getGroups() {
 
 
 function openGroup(friendlyName) {
-    console.log("Opening group screen");
-
-    document.getElementById("GroupScreen").querySelector(".GroupScreenTitle h2").textContent = friendlyName;
-    document.getElementById("GroupScreen").querySelector(".saveSceneBtn").dataset.friendlyname = friendlyName;
+    console.log("Opening group screen", friendlyName);
+    const GroupScreen = document.getElementById("GroupScreen");
+    GroupScreen.style.display = "flex";
+    GroupScreen.querySelector(".GroupScreenTitle h2").textContent = friendlyName;
+    GroupScreen.querySelector(".saveSceneBtn").dataset.friendlyname = friendlyName;
 
     const devices = document.getElementById("GroupScreenLights");
-    const scenes = document.getElementById("GroupScreenScenes");
+    const scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper");
 
-    getGroupData(friendlyName).then(function(group) {
+    // foo data -> true, makes random data
+    getGroupData(friendlyName, true).then(function(group) {
+        console.group("Open group algorithm");
+        console.log(group);
         group.members.forEach(member => {
-            devices.appendChild(makeLightSlider(member.friendly_name));
+            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+
+            devices.appendChild(makeLightSlider(member.friendly_name, {state: true, color: randomColor, openGroup: false}));
         })
 
         group.scenes.forEach(scene => {
-            scenes.appendChild(makeLightBox(scene.name, `setScene(${friendlyname}, ${scene.id})`));
+            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+            
+            scenes.appendChild(makeLightBox(
+                scene.name, 
+                {
+                color: randomColor,
+                action: `setScene(${friendlyName}, ${scene.id})`,
+                state: false,
+                }
+            ));
         })
+        console.groupEnd();
+    })
+
+    .then(function() {
+        //makeSliders();
+        makeSwiper();
     })
 
 }
 
-function makeLightBox(friendlyName, action, icon = "fa-lightbulb") {
+function closeGroup() {
+    const GroupScreen = document.getElementById("GroupScreen");
+    GroupScreen.style.display = "none";
+}
+
+// returns LightBox (can also make a scene box), needs friendlyName, default actions is toggle Light state, default icon is lightbulb
+function makeLightBox(friendlyName, options = {action: "toggleLightState(this.id)", icon: "fa-lightbulb", state: true}) {
 
     let lightBox = document.createElement("div");
     lightBox.setAttribute("class", "lightBox swiper-slide");
     lightBox.setAttribute("id", friendlyName);
-
-    lightBox.setAttribute("onclick", `${action}`);
+    if(options.hasOwnProperty("color")) {
+        lightBox.style.backgroundColor = options.color;
+    }
+    lightBox.setAttribute("onclick", `${options.action}`);
 
     lightBox.setAttribute("anim", "ripple");
-
-    let iconEle = document.createElement("i");
-        iconEle.setAttribute("class", `fas ${icon}`);
-    lightBox.appendChild(iconEle);
 
     let lightLabel = document.createElement("span");
         lightLabel.setAttribute("class", "lightBoxLabel");
         lightLabel.textContent = friendlyName;
     lightBox.appendChild(lightLabel);
 
-    let lightSettings = document.createElement("i");
-        lightSettings.setAttribute("class", "fas fa-ellipsis-v");
-        lightSettings.setAttribute("onclick", `colorPicker(${friendlyName})`);
-    lightBox.appendChild(lightSettings);
+    let stateWrapper = document.createElement("div");
+        stateWrapper.setAttribute("class", "lightBoxStateWrapper");
+    lightBox.appendChild(stateWrapper);
+
+        let iconEle = document.createElement("i");
+            iconEle.setAttribute("class", `fas ${options.icon}`);
+        stateWrapper.appendChild(iconEle);
+
+        if(options.state) {
+            let lightSettings = document.createElement("i");
+                lightSettings.setAttribute("class", "fas fa-ellipsis-v");
+                lightSettings.setAttribute("onclick", `colorPicker('${friendlyName}')`);
+            stateWrapper.appendChild(lightSettings);
+        }
+  
 
     return lightBox;
 }
 
-
-function makeLightSlider(friendlyName, icon = "") {
+// returns LightSlider, needs options for toggling etc, icon is optional
+function makeLightSlider(friendlyName, options = {} ,icon = "") {
  
     let lightcard = document.createElement("div");
         lightcard.setAttribute("id", friendlyName);
@@ -302,6 +289,9 @@ function makeLightSlider(friendlyName, icon = "") {
             let sliderContainer = document.createElement("div");
                 sliderContainer.setAttribute("id", friendlyName);
                 sliderContainer.setAttribute("class", "lightSlider");
+                if(options.hasOwnProperty("color")) {
+                    sliderContainer.style.backgroundColor = options.color;
+                }
             lightcard.appendChild(sliderContainer);
 
                 let cardBody = document.createElement("div");
@@ -316,39 +306,81 @@ function makeLightSlider(friendlyName, icon = "") {
                         extraStateDiv.setAttribute("class", "extraStateDiv");
                     cardBody.appendChild(extraStateDiv);
 
-                        let state = document.createElement("i");
-                            state.setAttribute("class", "fas fa-power-off");
-                            state.setAttribute("onclick", `toggleLightState("${friendlyName}")`)
-                        extraStateDiv.appendChild(state);
+                    // STATES:
+                        // - ON/OFF
+                        // - ColorPicker
+                        // - openGroup
 
-                        let color = document.createElement("i");
-                            color.setAttribute("class", "fas fa-eye-dropper")
-                            color.setAttribute("onclick", `colorPicker("${friendlyName}")`)
-                        extraStateDiv.appendChild(color);       
+                        if(options.state) {
+                            let state = document.createElement("i");
+                                state.setAttribute("class", "fas fa-power-off");
+                                state.setAttribute("onclick", `toggleLightState("${friendlyName}")`)
+                            extraStateDiv.appendChild(state);
+                        }
 
+                        if(options.color) {
+                            let color = document.createElement("i");
+                                color.setAttribute("class", "fas fa-eye-dropper")
+                                color.setAttribute("onclick", `colorPicker("${friendlyName}")`)
+                            extraStateDiv.appendChild(color); 
+                        }
+
+                        if(options.openGroup) {
+                            let openGroup = document.createElement("i");
+                                openGroup.setAttribute("class", "fas fa-external-link-square-alt");
+                                openGroup.setAttribute("onclick", `openGroup('${friendlyName}')`);
+                            extraStateDiv.appendChild(openGroup);
+                        }
+                        
     return lightcard;
 }
 
-function getGroupData(groupFriendlyName) {
+function getGroupData(groupFriendlyName, fooData = false) {
     return new Promise((resolve, reject) => {
         const url = `${HOST}/getData/bridge&groups`;
         
-        fetch(url).then(res => res.json())
-        .then(function(res) {
-            let Group = { };
-            res.forEach(function(group) {
-                if(group.friendly_name == groupFriendlyName) {
-                    Group = {
-                        friendlyName: group.friendly_name,
-                        scenes: group.scenes,
-                        members: group.members,
+        if(!fooData) {
+            fetch(url).then(res => res.json())
+            .then(function(res) {
+                let Group = { };
+                res.forEach(function(group) {
+                    if(group.friendly_name == groupFriendlyName) {
+                        Group = {
+                            friendlyName: group.friendly_name,
+                            scenes: group.scenes,
+                            members: group.members,
+                        }
                     }
-                    break;
-                }
+                })
+    
+                resolve(Group);
             })
+        } else {
+            // random
+            var randomNumber = getRandomNumber();
+            Group = {
+                friendlyName: arrayOfRandomNames[randomNumber],
+                scenes: [],
+                members: [],
+            }
+            
+            for(i = 0; i < 7; i++) {
+
+                randomNumber = getRandomNumber();
+                Group.scenes.push({
+                    name: arrayOfRandomNames[randomNumber],
+                    scene_id: getRandomNumber(50),
+                })
+
+                randomNumber = getRandomNumber();
+                Group.members.push({
+                    friendly_name: arrayOfRandomNames[randomNumber],
+                })
+            }
 
             resolve(Group);
-        })
+        }
+        
     })
 }
 
@@ -356,8 +388,6 @@ function makeSwiper() {
     const swiper = new Swiper('.swiper', {
         direction: "horizontal",
         loop: false,
-
-        
     });
 }
 
@@ -524,4 +554,32 @@ function lightOrDark(color) {
 
         return 'dark';
     }
+}
+
+
+// DEBUGGING
+const arrayOfRandomNames = ["Foo", "Bar", "HEllo", "TEst", "Random", "Light", "licht"];
+const arrayOfRandomColors = ["#5a52a1", "#a15252", "#9552a1", "#52a175"];
+
+function makeRandomBox() {
+    const randomNumber = getRandomNumber();
+    const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+    lastUsedParent.appendChild(makeLightBox(arrayOfRandomNames[randomNumber], {color: randomColor}));
+}
+
+function makeRandomSlider() {
+    const randomNumber = getRandomNumber();
+    const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+
+    lightSliderParent.appendChild(makeLightSlider(arrayOfRandomNames[randomNumber], {state: true, openGroup: true, color: randomColor}));
+}
+
+function makeRandomScene() {
+    const randomNumber = getRandomNumber();
+    const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+    sceneParent.appendChild(makeLightBox(arrayOfRandomNames[randomNumber], {color: randomColor, state: false}));
+}
+
+function getRandomNumber(top = arrayOfRandomNames.length) {
+    return Math.floor(Math.random() * top);
 }

@@ -74,7 +74,7 @@ a.active {
     font-size: 9pt;
 }
 
-.title h1 {
+.title h1, .title h2 {
     width: 100%;
     margin: 0;
     text-align: center;
@@ -85,11 +85,11 @@ a.active {
     margin-left: 2rem;
 }
 
-#menuOpener {
+#menuOpener,  #groupScreenClosener {
     transform: translateX(-2rem);
 }
 
-#menuOpener, #menuClosener {
+#menuOpener, #menuClosener, #groupScreenClosener {
     padding-top: 10px;
     color: white;
     font-size: 2em;
@@ -217,7 +217,7 @@ a.active {
     background-color: rgb(207, 109, 109);
 }
 
-#groups, #scenes {
+#groups, #scenes, #GroupScreenScenes, #GroupScreenLights {
     width: 90%;
     margin-left: 50%;
     transform: translateX(-50%);
@@ -329,7 +329,7 @@ a.active {
 }
 
 .lightSlider {
-    background-color: #333333 !important;
+    background-color: #333333;
 }
 
 
@@ -451,6 +451,14 @@ a.active {
     margin-right: 1rem;
 }
 
+.lightBox .lightBoxStateWrapper {
+    align-self: center;
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
 .lightBox:last-of-type {
     margin: 0
 }
@@ -498,4 +506,16 @@ a.active {
 
 .banner .banner-negative .fas {
     color: #6C4F4F;
+}
+
+/* group screen */
+#GroupScreen {
+    display: none;
+    position: absolute;
+    height: fit-content;
+    background-color: black;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    z-index: 5;
+    width: 100%;
 }
