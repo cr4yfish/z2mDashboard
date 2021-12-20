@@ -68,6 +68,41 @@ const { type } = require("os");
 
 //
 
+// writes new data to configfile
+app.post("/writeConfig", (req,res) => {
+    console.log("new write config request", req.body);
+
+    jsonfile.writeFile(configfile, req.body, function (err) {
+        if(!err) {
+            try {
+                res.sendStatus(200);
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } else {
+            console.log(err);
+        }
+    }) 
+})
+
+// returns data from configfile
+app.get("/readConfig", (req,res) => {
+    jsonfile.readFile(configfile, (err, obj) => {
+        if(!err) {
+            try {
+                res.send(obj)
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } else {
+            console.log(err);
+        }
+    })
+})
+
+
 app.get("/", (req,res) => {
     res.redirect("/home")
 })
@@ -202,7 +237,7 @@ app.get("/getData/:topic", (req, res) => {
 
     const topic = topicsArray.join().replace(",", "/");
 
-    worker = mqtt.connect(`mqtt://${_IPADDRESS}`)
+    worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
 
     worker.on("connect", function() {
         const url = `zigbee2mqtt/${topic}`;
@@ -237,40 +272,50 @@ app.get("/getData/:topic", (req, res) => {
     })
 })
 
-// writes new data to configfile
-app.post("/writeConfig", (req,res) => {
-    console.log("new write config request", req.body);
+app.get("/refreshMirror", function(req,res) {
+  console.log("Refreshing cached data...");
 
-    jsonfile.writeFile(configfile, req.body, function (err) {
-        if(!err) {
-            try {
-                res.sendStatus(200);
-            }
-            catch (err) {
-                console.log(err);
-            }
-        } else {
-            console.log(err);
-        }
-    }) 
-})
+  console.log("Connecting to MQTT broker...");
 
-// returns data from configfile
-app.get("/readConfig", (req,res) => {
-    jsonfile.readFile(configfile, (err, obj) => {
-        if(!err) {
-            try {
-                res.send(obj)
-            }
-            catch (err) {
-                console.log(err);
-            }
+  worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
+  worker.on("connect", function() {
+    const topic = "bridge/devices";
+    const url = `zigbee2mqtt/${topic}`;
+    console.log("Connected, getting data...");
+
+    worker.subscribe(url, function(err, granted) {
+        if(granted == undefiend || err) {
+            console.log("Could not subscribe to topic!", url, err);
         } else {
-            console.log(err);
+            worker.on("message", function(resTopic, buffer, packer) {
+                let message = JSON.parse(buffer.toString());
+                console.log("Got message, connection fully established.");
+
+                worker.unsubscribe(topic);
+
+                try {
+                    database.makeNewMirror(message).then(function(dataRes) {
+                        console.log(dataRes);
+                        res.sendStatus(200);
+                    })
+                }
+                catch (err) {
+                    console.log("ERROR AT DATABASE CALL");
+                    res.send(err);
+                }
+            })
         }
     })
+  })
 })
 
+app.get("/getMirror", function(req,res) {
+    console.log("Getting mirror...");
+    database.getMirror().then(function(databaseRes) {
+        console.log("Got", databaseRes);
+        res.send(databaseRes);
+    })
+})
 
 // saves current setup to scenes db
 app.post("/saveScene/:name/:group/:bri", (req,res) => {
@@ -344,3 +389,4 @@ app.post("/updateProgram", function(req, res) {
     }
     });
 })
+

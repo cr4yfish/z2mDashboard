@@ -127,7 +127,8 @@
 
 /* default slider foreground */
 .noUi-connect {
-    background: #ffffff25;
+    background: #ffffff3d;
+    border-right: solid 6px #ffffff5c;
     
 }
 

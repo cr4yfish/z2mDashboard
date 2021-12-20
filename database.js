@@ -70,17 +70,23 @@ db.mirror.loadDatabase();
 
 // mirror functions
 
-// inserts new mirror, automatic stimestamping
+// inserts new mirror, removes old
 const makeNewMirror = function(state) {
     return new Promise((resolve, reject) => {
-        const doc = {
-            timestamp: Date.now().toString(),
-            state: state,
-        }
+        db.mirror.remove({}, function(err, removedDocs) {
+            if(!err) {
+                console.log("Removed docs:", docs),
+                resolve(removedDocs);
+            } else {
+                console.log("ERROR IN DATABASE:", err);
+                reject(err);
+            }
+            
+        })
 
         db.mirror.insert(doc, function(err, savedDocs) {
             if(err) {
-                console.error(doc, err);
+                console.error(state, err);
             }
             resolve(savedDocs);
         })
@@ -89,16 +95,11 @@ const makeNewMirror = function(state) {
 
 
 // retrieves all mirrors, or mirror by timestam, if param set
-const getMirrors = function(reqTimeStamp = 0) {
+const getMirror = function() {
     return new Promise((resolve, reject) => {
 
         // only searches all if no timeStamp param has been given
         let findObj = { };
-        if(reqTimeStamp != 0) {
-            findObj  = {
-                timestamp: reqTimeStamp,
-            }
-        }
 
         db.mirror.find(findObj, function(err, docs) {
             if(err) {
@@ -110,4 +111,22 @@ const getMirrors = function(reqTimeStamp = 0) {
 }
 
 exports.makeNewMirror = makeNewMirror;
-exports.getMirrors = getMirrors;
+exports.getMirror = getMirror;
+
+db.devices = new Datastore({
+    filename: "./database/devices.db", autoload: true,
+})
+db.devices.loadDatabase();
+
+const makeNewDevices = function(devices, groups) {
+    return new Promise((resolve, reject) => {
+
+        db.devices.insert(devices, function(err, docs) {
+            if(!err) {
+                console.log(docs);
+            } else {
+                console.log(err);
+            }
+        })
+    })
+}

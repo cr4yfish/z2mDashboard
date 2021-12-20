@@ -58,11 +58,34 @@ function getDataFromBridge(friendlyName) {
 
     picker.on("input:end", function(color) {
 
-        // send data to backend
-            // get id
-            const friendlyName = document.getElementById("colorPickerLightName").textContent;
-            const colorString = color.hexString.replace("#","");
+        // get id
+        const friendlyName = document.getElementById("colorPickerLightName").textContent;
+        const colorString = color.hexString.replace("#","");
 
+        // change color of slider
+        let slider = document.querySelector(`#${friendlyName} .lightSlider`);
+        let sliderColor = slider.querySelector(".noUi-connects");
+
+        if(color != undefined) {
+            sliderColor.style.background = `${color.hexString}`;
+            slider.style.boxShadow = `0px 0px 30px ${color.hexString}`
+
+        } else {
+            // light is off or not reachable
+            sliderColor.style.background = "#333333";
+        }
+
+        // change color of label
+        let label = document.querySelector(`#${friendlyName} label`)
+
+        if(lightOrDark(color.hexString) == "light") {
+            label.style.color = "black"
+        } else {
+            label.style.color = "white"
+        }
+
+
+        // send data to backend
         const url = `${HOST}/set/${friendlyName}/color/${colorString}`;
 
         const options = {
@@ -75,28 +98,7 @@ function getDataFromBridge(friendlyName) {
         fetch(url, options)
         .then(function (response) {
 
-            let slider = document.querySelector(`#${friendlyName} .lightSlider`);
-
-            // change color of slider
-            let sliderColor = slider.querySelector(".noUi-connect");
-
-                if(color != undefined) {
-                    //sliderColor.style.background = `${color.hexString}`;
-                    //sliderColor.style.boxShadow = `0px 0px 30px ${color.hexString}`
-
-                } else {
-                    // light is off or not reachable
-                    //sliderColor.style.background = "#ffffff3a";
-                }
-
-                // change color of label
-                let label = document.querySelector(`#${friendlyName} label`)
-
-                if(lightOrDark(color.hexString) == "light") {
-                    label.style.color = "black"
-                } else {
-                    label.style.color = "white"
-                }
+   
         })
     })
 })();
@@ -290,7 +292,7 @@ function makeLightSlider(friendlyName, options = {} ,icon = "") {
                 sliderContainer.setAttribute("id", friendlyName);
                 sliderContainer.setAttribute("class", "lightSlider");
                 if(options.hasOwnProperty("color")) {
-                    sliderContainer.style.backgroundColor = options.color;
+                    //sliderContainer.style.backgroundColor = options.color;
                 }
             lightcard.appendChild(sliderContainer);
 
