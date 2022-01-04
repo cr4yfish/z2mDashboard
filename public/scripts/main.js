@@ -29,7 +29,7 @@ function closeMenu() {
     }
 }
 
-const HOST = 'http://1922.168.0.1:30000'
+const HOST = 'http://192.168.0.1:30000'
 //const HOST = 'http://192.168.1.105:30000'
 
 
