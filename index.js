@@ -75,7 +75,8 @@ app.post("/writeConfig", (req,res) => {
     jsonfile.writeFile(configfile, req.body, function (err) {
         if(!err) {
             try {
-                res.sendStatus(200);
+                console.log("Writing config, send status")
+                res.sendStatus(200).send();
             }
             catch (err) {
                 console.log(err);
@@ -91,6 +92,7 @@ app.get("/readConfig", (req,res) => {
     jsonfile.readFile(configfile, (err, obj) => {
         if(!err) {
             try {
+                console.log("Sending object");
                 res.send(obj)
             }
             catch (err) {
@@ -158,7 +160,8 @@ app.post("/set/:name/:key/:value", (req, res) => {
     client.publish(url, state , function(err, packet) {
         //console.log(err, packet);
         try {
-            res.sendStatus(200);
+            console.log("Sending OK")
+            res.sendStatus(200).send();
         }
         catch (err) {
             console.log(err);
@@ -177,6 +180,7 @@ app.get("/getGroups", (req, res) => {
     if(groups.length > 0) {
         console.log("using cache");
         try {
+            console.log("sending groups");
             res.send(groups);
         }
         catch (err) {
@@ -215,6 +219,7 @@ app.get("/getGroups", (req, res) => {
                 const names = friendlyNames();
                 console.log(names);
                 try {
+                    console.log("Sending names");
                     res.send(names);
                 }
                 catch (err) {
@@ -254,18 +259,17 @@ app.get("/getData/:topic", (req, res) => {
                 let message = JSON.parse(buffer.toString());
                 console.log("connected to", topic);
 
-                worker.unsubscribe(topic);
-
                 try {
-                    res.send(message);
                     console.log("Sent message");
+                    res.send(message);
                 }
                 catch (err) {
                     console.log("Error at getData/", topic, "message could not be sent");
                     console.log(err);
                 }
-                
-                //worker.end();
+
+                worker.unsubscribe(topic);
+                worker.end();
                 console.log("====== DONE =======");
             })
         })
@@ -276,15 +280,15 @@ app.get("/refreshMirror", function(req,res) {
   console.log("Refreshing cached data...");
 
   console.log("Connecting to MQTT broker...");
-
   worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
+  
   worker.on("connect", function() {
     const topic = "bridge/devices";
     const url = `zigbee2mqtt/${topic}`;
     console.log("Connected, getting data...");
 
     worker.subscribe(url, function(err, granted) {
-        if(granted == undefiend || err) {
+        if(granted == undefined || err) {
             console.log("Could not subscribe to topic!", url, err);
         } else {
             worker.on("message", function(resTopic, buffer, packer) {
@@ -295,8 +299,8 @@ app.get("/refreshMirror", function(req,res) {
 
                 try {
                     database.makeNewMirror(message).then(function(dataRes) {
-                        console.log(dataRes);
-                        res.sendStatus(200);
+                        console.log("sending response");
+                        res.sendStatus(200).send();
                     })
                 }
                 catch (err) {
@@ -313,6 +317,7 @@ app.get("/getMirror", function(req,res) {
     console.log("Getting mirror...");
     database.getMirror().then(function(databaseRes) {
         console.log("Got", databaseRes);
+        console.log("Sending mirror");
         res.send(databaseRes);
     })
 })
@@ -329,7 +334,8 @@ app.post("/saveScene/:name/:group/:bri", (req,res) => {
         const url = `zigbee2mqtt/${returnDoc.group}/set`
         let doc = `{"scene_store": ${returnDoc.id}}`
         //console.log("Contents: ",url, doc);
-        client.publish(url, doc, res.sendStatus(200));
+        console.log("Sending response to save scene");
+        client.publish(url, doc, res.status(200).send());
         console.log("===== DONE ====")
     })
 })
@@ -340,6 +346,7 @@ app.get("/getScenes", (req, res) => {
     .then(function(returnDocs) {
         //console.log(returnDocs)
         try {
+            console.log("Sending scenes")
             res.send(returnDocs);
         }
         catch (err) {
@@ -360,7 +367,8 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
     client.publish(url, msg, function(err, packet) {
         //console.log(err, packet); 
         try {
-            res.sendStatus(200);
+            console.log("Sending scene ok");
+            res.status(200).send();
         }
         catch (err) {
             console.log(err);
@@ -371,7 +379,8 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
 
 // updates program
 app.get("/update", (req, res) => {
-    res.sendStatus(200);
+    console.log("Sending update ok");
+    res.status(200).send();
 })
 
 app.post("/updateProgram", function(req, res) {
@@ -380,12 +389,14 @@ app.post("/updateProgram", function(req, res) {
     if (err) {
         //some err occurred
         console.error(err)
-        res.sendStatus(500);
+        console.log("Sending 500 err");
+        res.status(500).send();
     } else {
     // the *entire* stdout and stderr (buffered)
     console.log(`stdout: ${stdout}`);
     console.log(`stderr: ${stderr}`);
-    res.sendStatus(200);
+    console.log("Sending 200 ok");
+    res.status(200).send();
     }
     });
 })

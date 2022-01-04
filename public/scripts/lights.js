@@ -64,24 +64,27 @@ function getDataFromBridge(friendlyName) {
 
         // change color of slider
         let slider = document.querySelector(`#${friendlyName} .lightSlider`);
-        let sliderColor = slider.querySelector(".noUi-connects");
+        let sliderColor = document.querySelector(`#${friendlyName} .noUi-connects`);
 
-        if(color != undefined) {
-            sliderColor.style.background = `${color.hexString}`;
-            slider.style.boxShadow = `0px 0px 30px ${color.hexString}`
-
-        } else {
-            // light is off or not reachable
-            sliderColor.style.background = "#333333";
-        }
-
-        // change color of label
-        let label = document.querySelector(`#${friendlyName} label`)
-
-        if(lightOrDark(color.hexString) == "light") {
-            label.style.color = "black"
-        } else {
-            label.style.color = "white"
+        if(sliderColor != undefined) {
+            if(color != undefined) {
+                sliderColor.style.background = `${color.hexString}`;
+                slider.style.boxShadow = `0px 0px 30px ${color.hexString}`
+    
+            } else {
+                // light is off or not reachable
+                sliderColor.style.background = "#333333";
+            }
+    
+            // change color of label
+            let label = document.querySelector(`#${friendlyName} label`)
+    
+            if(lightOrDark(color.hexString) == "light") {
+                label.style.color = "black"
+            } else {
+                label.style.color = "white"
+            }
+    
         }
 
 
@@ -136,13 +139,15 @@ function getGroups() {
     .then(response => response.json())
 
     .then(function(groups) {
-
-        groups.forEach(function(group) {
+        console.log(groups);
+        groups.forEach(async function(group) {
             refreshTime++
             const parent = document.getElementById("groups");
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
-            parent.appendChild(makeLightSlider(group, {state: true, color: randomColor, openGroup: true}));
+            parent.appendChild(makeLightSlider(group, { state: true, color: randomColor, openGroup: true }));
+
+            await makeSlider(group);
             
         })
     })
@@ -178,7 +183,7 @@ function getGroups() {
 
             lights.forEach(function(light) {
 
-                parent.appendChild(makeLightBox(light, {action: "toggleLightState(this.id)" }));
+                parent.appendChild(makeLightBox(light));
                 
               
             })
@@ -188,7 +193,7 @@ function getGroups() {
         // finish setup
         .then(function () {
             makeSwiper();
-            makeSliders();
+            //makeSliders();
             setRipple();
             dashboardScene()
             serviceWorker();
@@ -224,6 +229,7 @@ function openGroup(friendlyName) {
                 scene.name, 
                 {
                 color: randomColor,
+                icon: "fa-lightbulb",
                 action: `setScene(${friendlyName}, ${scene.id})`,
                 state: false,
                 }
@@ -245,11 +251,16 @@ function closeGroup() {
 }
 
 // returns LightBox (can also make a scene box), needs friendlyName, default actions is toggle Light state, default icon is lightbulb
-function makeLightBox(friendlyName, options = {action: "toggleLightState(this.id)", icon: "fa-lightbulb", state: true}) {
+function makeLightBox(deviceObj, options = {icon: "fa-lightbulb", action: "toggleLightState(this.id)",  state: true}) {
+    console.group("MakeLightBox");
+
+    console.log(deviceObj, options);
+
+    let friendlyName = deviceObj.friendly_name;
 
     let lightBox = document.createElement("div");
-    lightBox.setAttribute("class", "lightBox swiper-slide");
-    lightBox.setAttribute("id", friendlyName);
+        lightBox.setAttribute("class", "lightBox swiper-slide");
+        lightBox.setAttribute("id", friendlyName);
     if(options.hasOwnProperty("color")) {
         lightBox.style.backgroundColor = options.color;
     }
@@ -277,7 +288,7 @@ function makeLightBox(friendlyName, options = {action: "toggleLightState(this.id
             stateWrapper.appendChild(lightSettings);
         }
   
-
+    console.groupEnd();
     return lightBox;
 }
 
@@ -339,6 +350,8 @@ function makeLightSlider(friendlyName, options = {} ,icon = "") {
 
 function getGroupData(groupFriendlyName, fooData = false) {
     return new Promise((resolve, reject) => {
+        console.log("Getting group data:", groupFriendlyName);
+
         const url = `${HOST}/getData/bridge&groups`;
         
         if(!fooData) {
@@ -393,7 +406,7 @@ function makeSwiper() {
     });
 }
 
-async function refreshData(element = "all") {
+function refreshData(element = "all") {
     // make array of friendly names that are present
     // for every name, make a fetch call to /getData/:friendlyname
     // read brightness and color data and update sliders and colors
@@ -413,15 +426,16 @@ async function refreshData(element = "all") {
         nameArray.push(elements);
     }
 
-
-
     for(let i = 0; i < nameArray.length; i++) {
+        console.group("REFRESH DATA FOR:", nameArray[i])
         let group = nameArray[i];
         let url = `${HOST}/getData/${group}`;
         console.log("refreshing for", group, "data from", url);
         fetch(url)
         .then(res => res.json())
-        .then(async function(response) {
+        .then(function(response) {
+            console.log("resonse:");
+            console.log(response);
             let brightness = response.brightness;
             let color = response.color;
             // update corresponding slider
@@ -451,17 +465,16 @@ async function refreshData(element = "all") {
                 label.style.color = "white"
             }
                 
-                
             console.log("==== DONE =====")
+            console.groupEnd();
         })
-        await sleep(1000);
     }
 }
 
 
 async function serviceWorker() {
     console.log("service worker");
-    refreshData();
+    //refreshData();
     //await sleep(refreshTime*1000*3);
     //serviceWorker()
 }

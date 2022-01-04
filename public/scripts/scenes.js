@@ -52,12 +52,12 @@ function setScene(group, sceneId, bri=254) {
         console.log(response);
     })
 
-    // set brightness
+    /* set brightness
     url = `${HOST}/set/${group}/brightness/${bri}`;
     fetch(url)
     .then(function (response) {
         console.log(response);
-    })
+    })*/
 }
 
 function saveCurrentScene(buttonE) {

@@ -73,10 +73,11 @@ db.mirror.loadDatabase();
 // inserts new mirror, removes old
 const makeNewMirror = function(state) {
     return new Promise((resolve, reject) => {
+
         db.mirror.remove({}, function(err, removedDocs) {
             if(!err) {
-                console.log("Removed docs:", docs),
-                resolve(removedDocs);
+                console.log("Removed docs:", removedDocs);
+                //resolve(removedDocs);
             } else {
                 console.log("ERROR IN DATABASE:", err);
                 reject(err);
@@ -84,7 +85,7 @@ const makeNewMirror = function(state) {
             
         })
 
-        db.mirror.insert(doc, function(err, savedDocs) {
+        db.mirror.insert(state, function(err, savedDocs) {
             if(err) {
                 console.error(state, err);
             }
