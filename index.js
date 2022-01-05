@@ -9,6 +9,7 @@
     const database = require("./database");
     const fs = require("fs");
     const jsonfile = require("jsonfile");
+    const cors = require("cors");
     const { config } = require("process");
 const { type } = require("os");
     app.set("view engine", "ejs");
@@ -30,6 +31,10 @@ const { type } = require("os");
     app.listen(_PORT)
 //
 
+// Cors setup
+    app.use(cors());
+
+//
 
 // expose public folder
 
