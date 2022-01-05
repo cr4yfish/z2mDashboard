@@ -236,6 +236,7 @@ a.active {
 }
 
 .light-card .card-body {
+    padding: 0.5rem;
     height: 100%;
     text-align: center;
     display: flex;
@@ -326,7 +327,6 @@ a.active {
 
 .lightSlider, .noUi-horizontal, #testSlider {
     height: 100% !important;
-    padding: 1rem;
 }
 
 .lightSlider {
