@@ -519,4 +519,5 @@ a.active {
     flex-wrap: nowrap;
     z-index: 5;
     width: 100%;
+    height: 100%;
 }

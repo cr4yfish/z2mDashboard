@@ -213,24 +213,39 @@ function openGroup(friendlyName) {
     const scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper");
 
     // foo data -> true, makes random data
-    getGroupData(friendlyName, true).then(function(group) {
+    getGroupData(friendlyName).then(function(group) {
+
+        /*
+        const exampleData = {
+            friendly_name: "Name",
+            members: [{
+                endpoint: 11,
+                ieee_address: "0x32322",
+            }],
+            scenes: [{
+                id: 30,
+                name: "scene name",
+            }],
+        }
+        */
+
         console.group("Open group algorithm");
         console.log(group);
         group.members.forEach(member => {
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
-            devices.appendChild(makeLightSlider(member.friendly_name, {state: true, color: randomColor, openGroup: false}));
+            devices.appendChild(makeLightSlider(member.ieee_address, {state: true, color: randomColor, openGroup: false}));
         })
 
         group.scenes.forEach(scene => {
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
             
             scenes.appendChild(makeLightBox(
-                scene.name, 
+                {friendly_name: scene.name}, 
                 {
                 color: randomColor,
                 icon: "fa-lightbulb",
-                action: `setScene(${friendlyName}, ${scene.id})`,
+                action: `setScene('${friendlyName}', ${scene.id})`,
                 state: false,
                 }
             ));
@@ -248,6 +263,19 @@ function openGroup(friendlyName) {
 function closeGroup() {
     const GroupScreen = document.getElementById("GroupScreen");
     GroupScreen.style.display = "none";
+
+    // clean screen
+    let lights = document.getElementById("GroupScreenLights").childNodes;
+    let scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper").childNodes;
+
+    for(let i = lights.length-1; i >= 0; i--) {
+        lights[i].remove();
+    }
+
+    for(let i = scenes.length-1; i >= 0; i--) {
+        scenes[i].remove();
+    }
+
 }
 
 // returns LightBox (can also make a scene box), needs friendlyName, default actions is toggle Light state, default icon is lightbulb
@@ -284,12 +312,16 @@ function makeLightBox(deviceObj, options = {icon: "fa-lightbulb", action: "toggl
         if(options.state) {
             let lightSettings = document.createElement("i");
                 lightSettings.setAttribute("class", "fas fa-ellipsis-v");
-                lightSettings.setAttribute("onclick", `colorPicker('${friendlyName}')`);
+                lightSettings.setAttribute("onclick", `stopProp(this); colorPicker('${friendlyName}')`);
             stateWrapper.appendChild(lightSettings);
         }
   
     console.groupEnd();
     return lightBox;
+}
+
+function stopProp() {
+    this.event.stopPropagation();
 }
 
 // returns LightSlider, needs options for toggling etc, icon is optional
@@ -358,13 +390,17 @@ function getGroupData(groupFriendlyName, fooData = false) {
             fetch(url).then(res => res.json())
             .then(function(res) {
                 let Group = { };
+
+                console.log(res);
                 res.forEach(function(group) {
                     if(group.friendly_name == groupFriendlyName) {
+
                         Group = {
                             friendlyName: group.friendly_name,
                             scenes: group.scenes,
                             members: group.members,
                         }
+
                     }
                 })
     
