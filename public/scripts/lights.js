@@ -235,6 +235,8 @@ function openGroup(friendlyName) {
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
             devices.appendChild(makeLightSlider(member.ieee_address, {state: true, color: randomColor, openGroup: false}));
+
+            makeSlider(member.ieee_address);
         })
 
         group.scenes.forEach(scene => {
@@ -249,6 +251,7 @@ function openGroup(friendlyName) {
                 state: false,
                 }
             ));
+
         })
         console.groupEnd();
     })

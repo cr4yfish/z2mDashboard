@@ -326,7 +326,7 @@ a.active {
 }
 
 .lightSlider, .noUi-horizontal, #testSlider {
-    height: 100% !important;
+    height: 6rem !important;
 }
 
 .lightSlider {
