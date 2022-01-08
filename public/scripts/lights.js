@@ -63,8 +63,9 @@ function getDataFromBridge(friendlyName) {
         const colorString = color.hexString.replace("#","");
 
         // change color of slider
-        let slider = document.querySelector(`#${friendlyName} .lightSlider`);
-        let sliderColor = document.querySelector(`#${friendlyName} .noUi-connects`);
+        let idELe = document.getElementById(`${friendlyName}`);
+            let slider = idELe.querySelector(`.lightSlider`);
+            let sliderColor = idELe.querySelector(`.noUi-connects`);
 
         if(sliderColor != undefined) {
             if(color != undefined) {
@@ -77,7 +78,7 @@ function getDataFromBridge(friendlyName) {
             }
     
             // change color of label
-            let label = document.querySelector(`#${friendlyName} label`)
+            let label = idELe.querySelector(`label`)
     
             if(lightOrDark(color.hexString) == "light") {
                 label.style.color = "black"
