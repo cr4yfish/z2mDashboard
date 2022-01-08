@@ -355,7 +355,7 @@ a.active {
     transform: translateX(-50%);
     background-color: #ffffff;
     top: 5%;
-    z-index: 3;
+    z-index: 10;
     border-radius: 3px;
     padding: 4rem 1rem;
     justify-content: center;
