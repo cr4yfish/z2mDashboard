@@ -10,7 +10,7 @@
     const fs = require("fs");
     const jsonfile = require("jsonfile");
     const { config } = require("process");
-const { type } = require("os");
+    const { type } = require("os");
     app.set("view engine", "ejs");
 
 
@@ -232,7 +232,6 @@ app.get("/getData/:topic", (req, res) => {
             })
         })
     })
-
 })
 
 // writes new data to configfile
