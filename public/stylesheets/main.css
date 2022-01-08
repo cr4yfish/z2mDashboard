@@ -2,6 +2,7 @@ html, body {
     background-color: #121212;
     height: 100%;
     margin: 0;
+    overflow-x: hidden;
 }
 
 h1, h2, a, label, .btn, #groups legend {
@@ -16,12 +17,16 @@ a {
     display: block;
     background-color: #333333;
     color: #C2C2C2;
-    padding: 0.5rem 1.5rem 0.5rem .5rem;
-    text-align: left;
+    padding: 0.25rem 0.5rem;
     text-decoration: none;
+    border-radius: 9px;
     transition: all .35s;
     margin: .5rem;
     margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 2rem;
 }
 
 a:hover {
@@ -58,10 +63,7 @@ a.active {
     transform-origin: center;
 }
 
-
-
 .title {
-    background-color: #404040;
     border-radius: 3px;
     display: flex;
     width: 100%;
@@ -69,16 +71,29 @@ a.active {
     align-items: baseline;
     padding: 1rem 0rem;
     margin-bottom: 2rem;
+    font-size: 9pt;
 }
 
-.title h1 {
-    width: fit-content;
+.title h1, .title h2 {
+    width: 100%;
     margin: 0;
+    text-align: center;
 }
 
-#menuOpener, #menuClosener {
+.sectionHeader {
+    font-size: 14pt;
+    margin-left: 2rem;
+}
+
+#menuOpener,  #groupScreenClosener {
+    transform: translateX(-2rem);
+}
+
+#menuOpener, #menuClosener, #groupScreenClosener {
+    padding-top: 10px;
     color: white;
     font-size: 2em;
+    cursor: pointer;
 }
 
 #menuHeader {
@@ -101,7 +116,7 @@ a.active {
     right: 0;
     background-color:#272727;
     overflow-x: hidden;
-    padding-top: 60px;
+    padding-top: 10px;
     transition: .5s;
 }
 
@@ -114,6 +129,32 @@ a.active {
     align-items: center;
     flex-direction: column;
     height: 50%;
+}
+
+/* theme color selection */
+.themeColorOption {
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+    margin-right: .5rem;
+}
+
+.themeColorOption:last-of-type {
+    margin-right: 0;
+}
+
+.themeColorOption #pink {
+    background-color: "#CA33E2";
+}
+.themeColorOption #blue {
+    background-color: "#5ACAE2";
+}
+.themeColorOption #green {
+    background-color: "#6BE233";
+}
+
+.themeColorOption .selected {
+    box-shadow: 0 0 10px whitesmoke;
 }
 
 
@@ -176,38 +217,78 @@ a.active {
     background-color: rgb(207, 109, 109);
 }
 
-#lightSwitches {
+#groups, #scenes, #GroupScreenScenes, #GroupScreenLights {
     width: 90%;
     margin-left: 50%;
     transform: translateX(-50%);
 }
 
-#lightSwitches .btn {
+#groups .btn {
     width: 100%;
 }
 
 
 .light-card {
-    height: 3rem;
+    height: 6rem;
     margin-bottom: 1rem;
-    border-radius: 3px;
-    border: 1px solid #ffffff3a;
+    border-radius: 6px;
     overflow: visible;
 }
 
 .light-card .card-body {
+    padding: 0.5rem;
     height: 100%;
     text-align: center;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-content: center;
-    justify-content: flex-start;
+    justify-content: center;
     margin-left: 1rem;
-    align-items: center;
+    align-items: flex-start;
 }
-.card-body label{
+
+.card-body label {
     z-index: 5;
     pointer-events: none;
+}
+
+.card-body i {
+    z-index: 5;
+    font-size: 14pt;
+    margin-top: .5rem;
+    cursor: pointer;
+    padding: .5rem;
+    border-radius: 53px;
+    color: rgba(0, 0, 0, 0.459);
+    background-color: rgba(255, 255, 255, 0.164);
+
+}
+
+.extraStateDiv {
+    display: flex;
+    flex-direction: row;
+}
+.extraStateDiv * {
+    margin-right: 1rem;
+}
+
+.extraStateDiv:last-child {
+    margin-right: 0;
+}
+
+
+#scenes {
+    display: flex;
+    flex-direction: row;
+
+}
+
+#scenes .sceneBox:first-of-type {
+    margin-left: 0;
+}
+
+#scenes .sceneBox:last-of-type {
+    margin-right: 0;
 }
 
 /* slider */
@@ -224,9 +305,6 @@ a.active {
     background: none !important;
 }
 
-.noUi-connect {
-    background: #ffffff3a;
-}
 
 .noUi-connects {
     overflow: visible !important;
@@ -248,11 +326,11 @@ a.active {
 }
 
 .lightSlider, .noUi-horizontal, #testSlider {
-    height: 100% !important;
+    height: 6rem !important;
 }
 
 .lightSlider {
-    background-color: #e7e7e7 !important;
+    background-color: #333333;
 }
 
 
@@ -267,6 +345,7 @@ a.active {
     left: 0;
     z-index: 2;
     display: none;
+    cursor: pointer;
 }
 
 #colorPicker {
@@ -327,7 +406,7 @@ a.active {
     flex-direction: row;
     flex-wrap: wrap;
 }
-
+/*
 .sceneBox {
     width: fit-content;
     height: fit-content;
@@ -341,4 +420,104 @@ a.active {
 .sceneBox h3 {
     color: rgb(255, 255, 255);
     margin: 0;
+}*/
+
+
+#lastUsed {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    width: 90%;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 2rem;
+}
+
+.lightBox {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    flex-direction: column;
+    cursor: pointer;
+    background-color: #333333;
+    padding: .5rem;
+    width: 5rem;
+    height: 5rem;
+    word-break: break-all;
+    border-radius: 6px;
+    margin-bottom: .5rem;
+    margin-right: 1rem;
+}
+
+.lightBox .lightBoxStateWrapper {
+    align-self: center;
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+.lightBox:last-of-type {
+    margin: 0
+}
+
+.lightBox span, .lightBox i  {
+    color: white;
+    font-size: 10pt;
+}
+
+
+/* fix swiper */
+.swiper-slide {
+    width: 5rem !important;
+    height: 5rem !important;
+}
+
+/* notice banner */
+
+.banner {
+    width: 75%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* positive banner */
+.banner .banner-positive {
+    background-color: #B3DFB2;
+    color: black;
+}
+
+.banner span {
+    color: inherit;
+}
+
+.banner .banner-positive .fas {
+    color: #3B533B;
+}
+
+/* negative banner */
+.banner .banner-negative {
+    background-color: #DFB2B2;
+    color: black;
+}
+
+.banner .banner-negative .fas {
+    color: #6C4F4F;
+}
+
+/* group screen */
+#GroupScreen {
+    display: none;
+    position: absolute;
+    height: fit-content;
+    background-color: black;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
 }

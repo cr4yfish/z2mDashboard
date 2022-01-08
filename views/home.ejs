@@ -12,11 +12,30 @@
         <!-- color picker -->
         <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
 
-        <title>Lights</title>
+        <title>Dashboard</title>
+
+        <link
+        rel="stylesheet"
+        href="https://unpkg.com/swiper@7/swiper-bundle.min.css"
+        />
+
+        <script src="https://unpkg.com/swiper@7/swiper-bundle.min.js"></script>
+
     </head>
 
     <body onload="getGroups();">
 
+        <div id="sceneSaver">
+
+            <div class="input-wrapper">
+                <label for="sceneNameInput">give it a name</label>
+                <input type="text" name="" id="sceneNameInput" placeholder="scene name" required>
+            </div>
+
+            <button id="sceneFinishBtn" onclick="saveCurrentScene(this);" anim="ripple" class="btn btn-primary">Done</button>
+            <button onclick="closeSceneOverlay();" anim="ripple" class="btn btn-primary btn-abort">Abort</button>
+            
+        </div>
 
         <div id="colorPicker">
             <h2 id="colorPickerLightName">Light_name</h2>
@@ -25,35 +44,52 @@
             <button onclick="closeOverlay();" anim="ripple" class="btn btn-primary">Done</button>
         </div>
 
+        <div id="GroupScreen">
+
+            <div class="title GroupScreenTitle">
+                <h2>Group_name</h2>
+                <i onclick="closeGroup();" id="groupScreenClosener" class="fas fa-times"></i>
+            </div>
+               
+            <h1 class="sectionHeader">Devices</h1>
+            <div id="GroupScreenLights">
+            </div>
+
+            <h1 class="sectionHeader">Scenes
+                <button class="btn btn-primary saveSceneBtn" anim="ripple" onclick="sceneOverlay(this)" data-friendlyname="all" >Save Current</button>
+            </h1>
+           
+            <div id="GroupScreenScenes" class="swiper">
+                <div class="swiper-wrapper"></div>
+            </div>
+           
+        </div>
+
         <div id="colorOverlay" onclick="closeOverlay();"></div>
 
-        
-
-        <div  anim="ripple" class="title">
-            <h1>Lights</h1>
+        <div class="title">
+            <h1>Dashboard</h1>
             <%- include("partials/menu.ejs"); %>
         </div>
 
 
-        <div id="lightSwitches">
-
-            <!--
-            <lightcard-component friendlyname="wohnzimmer_lights" title="Wohnzimmer"></lightcard-component>
-            <lightcard-component friendlyname="schlafzimmer_lights" title="Schlafzimmer"></lightcard-component>
-            <lightcard-component friendlyname="kuechen_lights" title="Küche"></lightcard-component>
-            <lightcard-component friendlyname="bad_lights" title="Bad"></lightcard-component>
-            
-            <button anim="ripple" onclick="toggleLightState('wohnzimmer_lights')" class="btn btn-primary">Toggle wohnzimmer lights</button>
-            
-            <button anim="ripple" onclick="toggleLightState('schlafzimmer_lights')" class="btn btn-primary">Toggle schlafzimmer lights</button>
-            
-            <button anim="ripple" onclick="toggleLightState('kuechen_lights')" class="btn btn-primary">Toggle küchen lights</button>
-    
-            <button anim="ripple" onclick="toggleLightState('bad_lights')" class="btn btn-primary">Toggle bad lights</button>-->
-            
-
+        <h1 class="sectionHeader">last used</h1>
+        <div id="lastUsed" class="swiper">
+            <div class="swiper-wrapper"></div>
         </div>
 
+        <h1 class="sectionHeader">Groups</h1>
+        <div id="groups"></div>
+
+        <h1 class="sectionHeader">Scenes 
+            <button class="btn btn-primary" anim="ripple" onclick="sceneOverlay(this)" data-friendlyname="all" >Save Current</button>
+        </h1>
+        <div id="scenes" class="swiper">
+            <div class="swiper-wrapper"></div>
+        </div>
+
+
+        <script src="/scripts/scenes.js" async defer></script>
         <script src="/scripts/sliders.js" async defer></script>
         <script src="/scripts/main.js"  async defer></script>
         <script src="/scripts/lights.js" async defer></script>

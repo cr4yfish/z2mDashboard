@@ -9,6 +9,7 @@
     const database = require("./database");
     const fs = require("fs");
     const jsonfile = require("jsonfile");
+    const cors = require("cors");
     const { config } = require("process");
     const { type } = require("os");
     app.set("view engine", "ejs");
@@ -30,6 +31,10 @@
     app.listen(_PORT)
 //
 
+// Cors setup
+    app.use(cors());
+
+//
 
 // expose public folder
 
@@ -68,6 +73,43 @@
 
 //
 
+// writes new data to configfile
+app.post("/writeConfig", (req,res) => {
+    console.log("new write config request", req.body);
+
+    jsonfile.writeFile(configfile, req.body, function (err) {
+        if(!err) {
+            try {
+                console.log("Writing config, send status")
+                res.sendStatus(200).send();
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } else {
+            console.log(err);
+        }
+    }) 
+})
+
+// returns data from configfile
+app.get("/readConfig", (req,res) => {
+    jsonfile.readFile(configfile, (err, obj) => {
+        if(!err) {
+            try {
+                console.log("Sending object");
+                res.send(obj)
+            }
+            catch (err) {
+                console.log(err);
+            }
+        } else {
+            console.log(err);
+        }
+    })
+})
+
+
 app.get("/", (req,res) => {
     res.redirect("/home")
 })
@@ -79,6 +121,7 @@ app.get("/home", (req, res) => {
 app.get("/scenes", (req, res) => {
     res.render("scenes.ejs", {})
 })
+
 app.get("/automation", (req, res) => {
     res.render("automation.ejs", {})
 })
@@ -108,7 +151,6 @@ app.post("/set/:name/:key/:value", (req, res) => {
     {
        // value is a string
        state = `{"${req.params.key}": "${value}"}`
-     
     } 
     else 
     {
@@ -120,10 +162,11 @@ app.post("/set/:name/:key/:value", (req, res) => {
 
     console.log(url, state);
 
-    client.publish(url, state, {qos: 1, retain: false} , function(err, packet) {
+    client.publish(url, state , function(err, packet) {
         //console.log(err, packet);
         try {
-            res.sendStatus(200);
+            console.log("Sending OK")
+            res.sendStatus(200).send();
         }
         catch (err) {
             console.log(err);
@@ -137,11 +180,12 @@ let groups = [];
 
 // get groups
 app.get("/getGroups", (req, res) => {
-    console.log("Gettings groups");
+    console.log("Getting groups");
 
     if(groups.length > 0) {
         console.log("using cache");
         try {
+            console.log("sending groups");
             res.send(groups);
         }
         catch (err) {
@@ -180,6 +224,7 @@ app.get("/getGroups", (req, res) => {
                 const names = friendlyNames();
                 console.log(names);
                 try {
+                    console.log("Sending names");
                     res.send(names);
                 }
                 catch (err) {
@@ -196,13 +241,13 @@ app.get("/getGroups", (req, res) => {
 
 // gets data from bridge
 app.get("/getData/:topic", (req, res) => {
-
+    console.log("Getting data from topic");
     let topicsArray = req.params.topic.split("&");
     //console.log(topicsArray);
 
     const topic = topicsArray.join().replace(",", "/");
 
-    worker = mqtt.connect(`mqtt://${_IPADDRESS}`)
+    worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
 
     worker.on("connect", function() {
         const url = `zigbee2mqtt/${topic}`;
@@ -211,63 +256,76 @@ app.get("/getData/:topic", (req, res) => {
         worker.subscribe(url, function(err, granted) {   
             
             if(granted == undefined || err) {
+                console.log("Error at getData/", topic, "Err or not granted");
                 console.log(err);
-            } else {
-                //console.log(granted);  
             }
     
-            worker.on("message", function(topic, buffer, packet) {
-                let message = buffer.toString();
-                console.log("connected to", topic, message);
- 
+            worker.on("message", function(resTopic, buffer, packet) {
+                let message = JSON.parse(buffer.toString());
+                console.log("connected to", topic);
+
                 try {
-                    res.send(JSON.parse(message));
+                    console.log("Sent message");
+                    res.send(message);
                 }
                 catch (err) {
+                    console.log("Error at getData/", topic, "message could not be sent");
                     console.log(err);
                 }
-                console.log("====== DONE =======");
+
                 worker.unsubscribe(topic);
                 worker.end();
+                console.log("====== DONE =======");
             })
         })
     })
 })
 
-// writes new data to configfile
-app.post("/writeConfig", (req,res) => {
-    console.log("new write config request", req.body);
+app.get("/refreshMirror", function(req,res) {
+  console.log("Refreshing cached data...");
 
-    jsonfile.writeFile(configfile, req.body, function (err) {
-        if(!err) {
-            try {
-                res.sendStatus(200);
-            }
-            catch (err) {
-                console.log(err);
-            }
-        } else {
-            console.log(err);
-        }
-    }) 
-})
+  console.log("Connecting to MQTT broker...");
+  worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
+  
+  worker.on("connect", function() {
+    const topic = "bridge/devices";
+    const url = `zigbee2mqtt/${topic}`;
+    console.log("Connected, getting data...");
 
-// returns data from configfile
-app.get("/readConfig", (req,res) => {
-    jsonfile.readFile(configfile, (err, obj) => {
-        if(!err) {
-            try {
-                res.send(obj)
-            }
-            catch (err) {
-                console.log(err);
-            }
+    worker.subscribe(url, function(err, granted) {
+        if(granted == undefined || err) {
+            console.log("Could not subscribe to topic!", url, err);
         } else {
-            console.log(err);
+            worker.on("message", function(resTopic, buffer, packer) {
+                let message = JSON.parse(buffer.toString());
+                console.log("Got message, connection fully established.");
+
+                worker.unsubscribe(topic);
+
+                try {
+                    database.makeNewMirror(message).then(function(dataRes) {
+                        console.log("sending response");
+                        res.sendStatus(200).send();
+                    })
+                }
+                catch (err) {
+                    console.log("ERROR AT DATABASE CALL");
+                    res.send(err);
+                }
+            })
         }
     })
+  })
 })
 
+app.get("/getMirror", function(req,res) {
+    console.log("Getting mirror...");
+    database.getMirror().then(function(databaseRes) {
+        console.log("Got", databaseRes);
+        console.log("Sending mirror");
+        res.send(databaseRes);
+    })
+})
 
 // saves current setup to scenes db
 app.post("/saveScene/:name/:group/:bri", (req,res) => {
@@ -281,7 +339,8 @@ app.post("/saveScene/:name/:group/:bri", (req,res) => {
         const url = `zigbee2mqtt/${returnDoc.group}/set`
         let doc = `{"scene_store": ${returnDoc.id}}`
         //console.log("Contents: ",url, doc);
-        client.publish(url, doc, res.sendStatus(200));
+        console.log("Sending response to save scene");
+        client.publish(url, doc, res.status(200).send());
         console.log("===== DONE ====")
     })
 })
@@ -292,6 +351,7 @@ app.get("/getScenes", (req, res) => {
     .then(function(returnDocs) {
         //console.log(returnDocs)
         try {
+            console.log("Sending scenes")
             res.send(returnDocs);
         }
         catch (err) {
@@ -309,10 +369,11 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
     let msg = `{"scene_recall": ${req.params.sceneId}}`
 
     // set scene
-    client.publish(url, msg, {qos: 1, retain: false} , function(err, packet) {
+    client.publish(url, msg, function(err, packet) {
         //console.log(err, packet); 
         try {
-            res.sendStatus(200);
+            console.log("Sending scene ok");
+            res.status(200).send();
         }
         catch (err) {
             console.log(err);
@@ -320,3 +381,28 @@ app.get("/scene/:groupName/:sceneId", (req, res) => {
         console.log("======== DONE ========")
     })
 })
+
+// updates program
+app.get("/update", (req, res) => {
+    console.log("Sending update ok");
+    res.status(200).send();
+})
+
+app.post("/updateProgram", function(req, res) {
+    const { exec } = require('child_process');
+    exec('./update.sh', (err, stdout, stderr) => {
+    if (err) {
+        //some err occurred
+        console.error(err)
+        console.log("Sending 500 err");
+        res.status(500).send();
+    } else {
+    // the *entire* stdout and stderr (buffered)
+    console.log(`stdout: ${stdout}`);
+    console.log(`stderr: ${stderr}`);
+    console.log("Sending 200 ok");
+    res.status(200).send();
+    }
+    });
+})
+

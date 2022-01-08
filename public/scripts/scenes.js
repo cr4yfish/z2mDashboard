@@ -27,7 +27,7 @@ function getGroups() {
             let button = document.createElement("button")
                 button.setAttribute("class", "btn btn-primary")
                 button.setAttribute("anim", "ripple")
-                button.setAttribute("onclick", "colorOverlay(this)")
+                button.setAttribute("onclick", "sceneOverlay(this)")
                 button.setAttribute("data-friendlyname", group);
                 button.textContent = "save current"
             container.appendChild(button);
@@ -52,19 +52,20 @@ function setScene(group, sceneId, bri=254) {
         console.log(response);
     })
 
-    // set brightness
+    /* set brightness
     url = `${HOST}/set/${group}/brightness/${bri}`;
     fetch(url)
     .then(function (response) {
         console.log(response);
-    })
+    })*/
 }
 
 function saveCurrentScene(buttonE) {
     console.log("saving current scene");
 
-    const sceneName = document.getElementById("sceneNameInput").value;
-    const sceneGroup = buttonE.dataset.friendlyname;
+    let sceneName = document.getElementById("sceneNameInput").value.replace("/","&");
+    // replace "/", otherwise API will get it wrong
+    let sceneGroup = buttonE.dataset.friendlyname;
     console.log(sceneName, sceneGroup);
     
 
@@ -74,7 +75,11 @@ function saveCurrentScene(buttonE) {
     .then(res => res.json())
     .then(function (response) {
         console.log(response)
-        const brightness = response.brightness;
+        let brightness = response.brightness;
+        
+        if(brightness == undefined) {
+            brightness = 254;
+        }
 
         // save scene
         url = `${HOST}/saveScene/${sceneName}/${sceneGroup}/${brightness}`
@@ -91,68 +96,82 @@ function saveCurrentScene(buttonE) {
         })
 
     })
-
-
-    
-
-
 }
 
 function getScenes() {
-    const url = `${HOST}/getScenes`
-    fetch(url)
-    .then(response => response.json())
-    .then(function(response) {
-        console.log(response);
-        
-        console.log("=== REMOVING OLD SCENE BOXES ===")
-
-            // remove old data
-            console.log("sceneboxes:", document.querySelectorAll(".sceneBox").length)
-
-            let oldItems = document.querySelectorAll(".sceneBox")
-
-            for(let i = oldItems.length-1; i >= 0; i--) {
-                console.log(oldItems[i]);
-                oldItems[i].remove();
-            }
-
-        console.log("=== DONE ===")
-
-        response.forEach(function(scene) {
-            console.log("=== MAKING SCENE BOX ===")
-            let parent = document.getElementById(scene.group).querySelector(".sceneBoxContainer");
-
-
-            console.log(scene.sceneName, scene.id)
-
-                let box = document.createElement("div");
-                    box.setAttribute("class", "sceneBox")
-                    box.setAttribute("onclick", `setScene("${scene.group}", "${scene.id}")`)
-                    box.setAttribute("anim", "ripple")
-                
-                    let label = document.createElement("h3");
-                        label.textContent = scene.sceneName;
-                    box.appendChild(label);
-
-                parent.appendChild(box);
-
+    return new Promise((resolve, reject) => {
+        const url = `${HOST}/getScenes`
+        fetch(url)
+        .then(response => response.json())
+        .then(function(response) {
+            console.log(response);
+            
+            console.log("=== REMOVING OLD SCENE BOXES ===")
+    
+                // remove old data
+                console.log("sceneboxes:", document.querySelectorAll(".sceneBox").length)
+    
+                let oldItems = document.querySelectorAll(".sceneBox")
+    
+                for(let i = oldItems.length-1; i >= 0; i--) {
+                    console.log(oldItems[i]);
+                    oldItems[i].remove();
+                }
+            resolve(response);
             console.log("=== DONE ===")
         })
     })
 }
 
-function colorOverlay(e) {
+function makeSceneBox(parent, scene) {
+    console.log("=== MAKING SCENE BOX ===");
+
+        let box = document.createElement("div");
+            box.setAttribute("class", "lightBox sceneBox swiper-slide");
+            box.setAttribute("onclick", `setScene("${scene.group}", "${scene.id}")`);
+            box.setAttribute("anim", "ripple");
+
+            let icon = document.createElement("i");
+                icon.setAttribute("class", "fas fa-play")
+            box.appendChild(icon);
+
+            let label = document.createElement("span");
+                label.textContent = scene.sceneName;
+            box.appendChild(label);
+
+        parent.appendChild(box);
+
+    console.log("=== DONE ===");
+}
+
+function groupScene() {
+    getScenes().then(function(scenes){
+        scenes.forEach(function(scene) {
+            let parent = document.getElementById(scene.group).querySelector(".sceneBoxContainer");
+            makeSceneBox(parent);
+        })
+    }) 
+}
+
+function dashboardScene() {
+    getScenes().then(function(scenes) {
+        scenes.forEach(function(scene) {
+            let parent = document.querySelector("#scenes .swiper-wrapper");
+            makeSceneBox(parent, scene);
+        })
+    })
+}
+
+function sceneOverlay(e) {
     document.getElementById("sceneFinishBtn").setAttribute("data-friendlyname", e.dataset.friendlyname)
 
     document.getElementById("colorOverlay").style.display = "block"
-    document.getElementById("sceneSaver").style.display = "flex"
-
+    document.getElementById("sceneSaver").style.display = "flex";
 } 
 
-function closeOverlay() {
-    document.getElementById("colorOverlay").style.display = "none"
-    document.getElementById("sceneSaver").style.display = "none"
+function closeSceneOverlay() {
+    document.getElementById("colorOverlay").style.display = "none";
+    document.getElementById("sceneSaver").style.display = "none";
 
     // clear input
     document.getElementById("sceneNameInput").value = "";

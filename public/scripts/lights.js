@@ -1,3 +1,5 @@
+
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -56,11 +58,37 @@ function getDataFromBridge(friendlyName) {
 
     picker.on("input:end", function(color) {
 
-        // send data to backend
-            // get id
-            const friendlyName = document.getElementById("colorPickerLightName").textContent;
-            const colorString = color.hexString.replace("#","");
+        // get id
+        const friendlyName = document.getElementById("colorPickerLightName").textContent;
+        const colorString = color.hexString.replace("#","");
 
+        // change color of slider
+        let slider = document.querySelector(`#${friendlyName} .lightSlider`);
+        let sliderColor = document.querySelector(`#${friendlyName} .noUi-connects`);
+
+        if(sliderColor != undefined) {
+            if(color != undefined) {
+                sliderColor.style.background = `${color.hexString}`;
+                slider.style.boxShadow = `0px 0px 30px ${color.hexString}`
+    
+            } else {
+                // light is off or not reachable
+                sliderColor.style.background = "#333333";
+            }
+    
+            // change color of label
+            let label = document.querySelector(`#${friendlyName} label`)
+    
+            if(lightOrDark(color.hexString) == "light") {
+                label.style.color = "black"
+            } else {
+                label.style.color = "white"
+            }
+    
+        }
+
+
+        // send data to backend
         const url = `${HOST}/set/${friendlyName}/color/${colorString}`;
 
         const options = {
@@ -73,42 +101,28 @@ function getDataFromBridge(friendlyName) {
         fetch(url, options)
         .then(function (response) {
 
-            let slider = document.querySelector(`#${friendlyName} .lightSlider`);
-
-            // change color of slider
-            let sliderColor = slider.querySelector(".noUi-connect");
-
-                if(color != undefined) {
-                    sliderColor.style.background = `${color.hexString}`;
-                    //sliderColor.style.boxShadow = `0px 0px 30px ${color.hexString}`
-
-                } else {
-                    // light is off or not reachable
-                    sliderColor.style.background = "#ffffff3a";
-                }
-
-                // change color of label
-                let label = document.querySelector(`#${friendlyName} label`)
-
-                if(lightOrDark(color.hexString) == "light") {
-                    label.style.color = "black"
-                } else {
-                    label.style.color = "white"
-                }
+   
         })
     })
 })();
 
 
 function colorOverlay(id) {
-        document.getElementById("colorOverlay").style.display = "block"
-        document.getElementById("colorPicker").style.display = "flex"
-        document.getElementById("colorPickerLightName").textContent = id;
+    document.getElementById("colorOverlay").style.display = "block";
 } 
 
+function colorPicker(id) {
+    document.getElementById("colorPicker").style.display = "flex";
+    document.getElementById("colorPickerLightName").textContent = id;
+
+    colorOverlay();
+    
+}
+
 function closeOverlay() {
-    document.getElementById("colorOverlay").style.display = "none"
-    document.getElementById("colorPicker").style.display = "none"
+    document.getElementById("colorOverlay").style.display = "none";
+    document.getElementById("colorPicker").style.display = "none";
+    document.getElementById("sceneSaver").style.display = "none";
 
     try {
         document.getElementById("menu").style.width = "0";
@@ -125,41 +139,313 @@ function getGroups() {
     .then(response => response.json())
 
     .then(function(groups) {
-
-        groups.forEach(function(group) {
+        console.log(groups);
+        groups.forEach(async function(group) {
             refreshTime++
-            const parent = document.getElementById("lightSwitches");
- 
-            let lightcard = document.createElement("div");
-                lightcard.setAttribute("id", group);
-                lightcard.setAttribute("class", "card light-card");
-                lightcard.setAttribute("onclick", "colorOverlay(this.id);")
-                lightcard.setAttribute("anim", "ripple");
+            const parent = document.getElementById("groups");
+            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
-                    let sliderContainer = document.createElement("div");
-                        sliderContainer.setAttribute("id", group);
-                        sliderContainer.setAttribute("class", "lightSlider");
-                    lightcard.appendChild(sliderContainer);
+            parent.appendChild(makeLightSlider(group, { state: true, color: randomColor, openGroup: true }));
 
-                        let cardBody = document.createElement("div");
-                            cardBody.setAttribute("class", "card-body");
-                        sliderContainer.appendChild(cardBody);
-
-                            let label = document.createElement("label");
-                                label.textContent = group;
-                            cardBody.appendChild(label);
-
-            parent.prepend(lightcard);
+            await makeSlider(group);
+            
         })
     })
-    .then(function () {
-        makeSliders();
-        setRipple();
-        serviceWorker();
+    // make lights
+    .then(function() {
+        console.log("Gettings devices data")
+
+        let url = `${HOST}/getData/bridge&devices`
+        fetch(url)
+        .then(data => data.json())
+
+        .then(function(data) {
+            console.log(data);
+
+            // sort out lights
+
+            let lights = [];
+
+            data.forEach(function(item) {
+                try {
+                    if (item.definition.exposes[0].type == "light") {
+                        lights.push(item);
+                    }
+                }
+                catch (e) {
+                    //console.log(e);
+                }
+            })
+
+            console.log(lights);
+
+            const parent = document.querySelector("#lastUsed .swiper-wrapper");
+
+            lights.forEach(function(light) {
+
+                parent.appendChild(makeLightBox(light));
+                
+              
+            })
+
+        })
+
+        // finish setup
+        .then(function () {
+            makeSwiper();
+            //makeSliders();
+            setRipple();
+            dashboardScene()
+            serviceWorker();
+        })
     })
 }
 
-async function refreshData(element = "all") {
+
+function openGroup(friendlyName) {
+    console.log("Opening group screen", friendlyName);
+    const GroupScreen = document.getElementById("GroupScreen");
+    GroupScreen.style.display = "flex";
+    GroupScreen.querySelector(".GroupScreenTitle h2").textContent = friendlyName;
+    GroupScreen.querySelector(".saveSceneBtn").dataset.friendlyname = friendlyName;
+
+    const devices = document.getElementById("GroupScreenLights");
+    const scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper");
+
+    // foo data -> true, makes random data
+    getGroupData(friendlyName).then(function(group) {
+
+        /*
+        const exampleData = {
+            friendly_name: "Name",
+            members: [{
+                endpoint: 11,
+                ieee_address: "0x32322",
+            }],
+            scenes: [{
+                id: 30,
+                name: "scene name",
+            }],
+        }
+        */
+
+        console.group("Open group algorithm");
+        console.log(group);
+        group.members.forEach(member => {
+            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+
+            devices.appendChild(makeLightSlider(member.ieee_address, {state: true, color: randomColor, openGroup: false}));
+
+            makeSlider(member.ieee_address);
+        })
+
+        group.scenes.forEach(scene => {
+            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+            
+            scenes.appendChild(makeLightBox(
+                {friendly_name: scene.name}, 
+                {
+                color: randomColor,
+                icon: "fa-lightbulb",
+                action: `setScene('${friendlyName}', ${scene.id})`,
+                state: false,
+                }
+            ));
+
+        })
+        console.groupEnd();
+    })
+
+    .then(function() {
+        //makeSliders();
+        makeSwiper();
+    })
+
+}
+
+function closeGroup() {
+    const GroupScreen = document.getElementById("GroupScreen");
+    GroupScreen.style.display = "none";
+
+    // clean screen
+    let lights = document.getElementById("GroupScreenLights").childNodes;
+    let scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper").childNodes;
+
+    for(let i = lights.length-1; i >= 0; i--) {
+        lights[i].remove();
+    }
+
+    for(let i = scenes.length-1; i >= 0; i--) {
+        scenes[i].remove();
+    }
+
+}
+
+// returns LightBox (can also make a scene box), needs friendlyName, default actions is toggle Light state, default icon is lightbulb
+function makeLightBox(deviceObj, options = {icon: "fa-lightbulb", action: "toggleLightState(this.id)",  state: true}) {
+    console.group("MakeLightBox");
+
+    console.log(deviceObj, options);
+
+    let friendlyName = deviceObj.friendly_name;
+
+    let lightBox = document.createElement("div");
+        lightBox.setAttribute("class", "lightBox swiper-slide");
+        lightBox.setAttribute("id", friendlyName);
+    if(options.hasOwnProperty("color")) {
+        lightBox.style.backgroundColor = options.color;
+    }
+    lightBox.setAttribute("onclick", `${options.action}`);
+
+    lightBox.setAttribute("anim", "ripple");
+
+    let lightLabel = document.createElement("span");
+        lightLabel.setAttribute("class", "lightBoxLabel");
+        lightLabel.textContent = friendlyName;
+    lightBox.appendChild(lightLabel);
+
+    let stateWrapper = document.createElement("div");
+        stateWrapper.setAttribute("class", "lightBoxStateWrapper");
+    lightBox.appendChild(stateWrapper);
+
+        let iconEle = document.createElement("i");
+            iconEle.setAttribute("class", `fas ${options.icon}`);
+        stateWrapper.appendChild(iconEle);
+
+        if(options.state) {
+            let lightSettings = document.createElement("i");
+                lightSettings.setAttribute("class", "fas fa-ellipsis-v");
+                lightSettings.setAttribute("onclick", `stopProp(this); colorPicker('${friendlyName}')`);
+            stateWrapper.appendChild(lightSettings);
+        }
+  
+    console.groupEnd();
+    return lightBox;
+}
+
+function stopProp() {
+    this.event.stopPropagation();
+}
+
+// returns LightSlider, needs options for toggling etc, icon is optional
+function makeLightSlider(friendlyName, options = {} ,icon = "") {
+ 
+    let lightcard = document.createElement("div");
+        lightcard.setAttribute("id", friendlyName);
+        lightcard.setAttribute("class", "card light-card");
+
+            let sliderContainer = document.createElement("div");
+                sliderContainer.setAttribute("id", friendlyName);
+                sliderContainer.setAttribute("class", "lightSlider");
+                if(options.hasOwnProperty("color")) {
+                    //sliderContainer.style.backgroundColor = options.color;
+                }
+            lightcard.appendChild(sliderContainer);
+
+                let cardBody = document.createElement("div");
+                    cardBody.setAttribute("class", "card-body");
+                sliderContainer.appendChild(cardBody);
+
+                    let label = document.createElement("label");
+                        label.textContent = friendlyName;
+                    cardBody.appendChild(label);
+
+                    let extraStateDiv = document.createElement("div");
+                        extraStateDiv.setAttribute("class", "extraStateDiv");
+                    cardBody.appendChild(extraStateDiv);
+
+                    // STATES:
+                        // - ON/OFF
+                        // - ColorPicker
+                        // - openGroup
+
+                        if(options.state) {
+                            let state = document.createElement("i");
+                                state.setAttribute("class", "fas fa-power-off");
+                                state.setAttribute("onclick", `toggleLightState("${friendlyName}")`)
+                            extraStateDiv.appendChild(state);
+                        }
+
+                        if(options.color) {
+                            let color = document.createElement("i");
+                                color.setAttribute("class", "fas fa-eye-dropper")
+                                color.setAttribute("onclick", `colorPicker("${friendlyName}")`)
+                            extraStateDiv.appendChild(color); 
+                        }
+
+                        if(options.openGroup) {
+                            let openGroup = document.createElement("i");
+                                openGroup.setAttribute("class", "fas fa-external-link-square-alt");
+                                openGroup.setAttribute("onclick", `openGroup('${friendlyName}')`);
+                            extraStateDiv.appendChild(openGroup);
+                        }
+                        
+    return lightcard;
+}
+
+function getGroupData(groupFriendlyName, fooData = false) {
+    return new Promise((resolve, reject) => {
+        console.log("Getting group data:", groupFriendlyName);
+
+        const url = `${HOST}/getData/bridge&groups`;
+        
+        if(!fooData) {
+            fetch(url).then(res => res.json())
+            .then(function(res) {
+                let Group = { };
+
+                console.log(res);
+                res.forEach(function(group) {
+                    if(group.friendly_name == groupFriendlyName) {
+
+                        Group = {
+                            friendlyName: group.friendly_name,
+                            scenes: group.scenes,
+                            members: group.members,
+                        }
+
+                    }
+                })
+    
+                resolve(Group);
+            })
+        } else {
+            // random
+            var randomNumber = getRandomNumber();
+            Group = {
+                friendlyName: arrayOfRandomNames[randomNumber],
+                scenes: [],
+                members: [],
+            }
+            
+            for(i = 0; i < 7; i++) {
+
+                randomNumber = getRandomNumber();
+                Group.scenes.push({
+                    name: arrayOfRandomNames[randomNumber],
+                    scene_id: getRandomNumber(50),
+                })
+
+                randomNumber = getRandomNumber();
+                Group.members.push({
+                    friendly_name: arrayOfRandomNames[randomNumber],
+                })
+            }
+
+            resolve(Group);
+        }
+        
+    })
+}
+
+function makeSwiper() {
+    const swiper = new Swiper('.swiper', {
+        direction: "horizontal",
+        loop: false,
+    });
+}
+
+function refreshData(element = "all") {
     // make array of friendly names that are present
     // for every name, make a fetch call to /getData/:friendlyname
     // read brightness and color data and update sliders and colors
@@ -179,15 +465,16 @@ async function refreshData(element = "all") {
         nameArray.push(elements);
     }
 
-
-
     for(let i = 0; i < nameArray.length; i++) {
-        let group = nameArray[i]
-        let url = `${HOST}/getData/${group}`
-        console.log("refreshing for", group, "data from", url)
+        console.group("REFRESH DATA FOR:", nameArray[i])
+        let group = nameArray[i];
+        let url = `${HOST}/getData/${group}`;
+        console.log("refreshing for", group, "data from", url);
         fetch(url)
         .then(res => res.json())
-        .then(async function(response) {
+        .then(function(response) {
+            console.log("resonse:");
+            console.log(response);
             let brightness = response.brightness;
             let color = response.color;
             // update corresponding slider
@@ -199,13 +486,13 @@ async function refreshData(element = "all") {
             // change color of slider
             let sliderColor = slider.querySelector(".noUi-connect");
                 if(color != undefined) {
-                    sliderColor.style.background = xyBriToRgb(color.x, color.y, brightness);
+                    //sliderColor.style.background = xyBriToRgb(color.x, color.y, brightness);
                     //sliderColor.style.boxShadow = `0px 0px 30px ${xyBriToRgb(color.x, color.y, brightness)}`
 
                 } 
                  else {
                     // light is off or not reachable
-                    sliderColor.style.background = "#ffffff";
+                    //sliderColor.style.background = "#ffffff";
                 }
 
             // change color of label
@@ -217,18 +504,18 @@ async function refreshData(element = "all") {
                 label.style.color = "white"
             }
                 
-                
             console.log("==== DONE =====")
+            console.groupEnd();
         })
-        await sleep(250);
     }
 }
 
 
 async function serviceWorker() {
     console.log("service worker");
-    refreshData();
-    await sleep(refreshTime*1000*3);
+    //refreshData();
+    //await sleep(refreshTime*1000*3);
+    //serviceWorker()
 }
 
 function xyBriToRgb(x, y, bri)
@@ -321,4 +608,32 @@ function lightOrDark(color) {
 
         return 'dark';
     }
+}
+
+
+// DEBUGGING
+const arrayOfRandomNames = ["Foo", "Bar", "HEllo", "TEst", "Random", "Light", "licht"];
+const arrayOfRandomColors = ["#5a52a1", "#a15252", "#9552a1", "#52a175"];
+
+function makeRandomBox() {
+    const randomNumber = getRandomNumber();
+    const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+    lastUsedParent.appendChild(makeLightBox(arrayOfRandomNames[randomNumber], {color: randomColor}));
+}
+
+function makeRandomSlider() {
+    const randomNumber = getRandomNumber();
+    const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+
+    lightSliderParent.appendChild(makeLightSlider(arrayOfRandomNames[randomNumber], {state: true, openGroup: true, color: randomColor}));
+}
+
+function makeRandomScene() {
+    const randomNumber = getRandomNumber();
+    const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+    sceneParent.appendChild(makeLightBox(arrayOfRandomNames[randomNumber], {color: randomColor, state: false}));
+}
+
+function getRandomNumber(top = arrayOfRandomNames.length) {
+    return Math.floor(Math.random() * top);
 }

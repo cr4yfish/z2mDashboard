@@ -2,7 +2,6 @@ console.log("Database module loaded")
 console.log("==========")
 
 const Datastore = require("@seald-io/nedb")
-const crypto = require("crypto")
 // databases:
 
 var db = {}
@@ -10,9 +9,7 @@ var db = {}
 db.scenes = new Datastore({ filename: "./database/scenes.db", autoload: true})
 db.scenes.loadDatabase();
 
-
-
-// functions:
+// scene functions:
 
 // Saves current light config as a scene for the room
 const saveCurrentToScene = function(name, group, bri = 254) {
@@ -59,5 +56,78 @@ const getAllScenes = function() {
     })
 }
 
+
 exports.getAllScenes = getAllScenes;
 exports.saveCurrentToScene = saveCurrentToScene;
+
+
+
+db.mirror = new Datastore({
+    filename: "./database/mirror.db", autoload: true,
+})
+db.mirror.loadDatabase();
+
+
+// mirror functions
+
+// inserts new mirror, removes old
+const makeNewMirror = function(state) {
+    return new Promise((resolve, reject) => {
+
+        db.mirror.remove({}, function(err, removedDocs) {
+            if(!err) {
+                console.log("Removed docs:", removedDocs);
+                //resolve(removedDocs);
+            } else {
+                console.log("ERROR IN DATABASE:", err);
+                reject(err);
+            }
+            
+        })
+
+        db.mirror.insert(state, function(err, savedDocs) {
+            if(err) {
+                console.error(state, err);
+            }
+            resolve(savedDocs);
+        })
+    })
+}
+
+
+// retrieves all mirrors, or mirror by timestam, if param set
+const getMirror = function() {
+    return new Promise((resolve, reject) => {
+
+        // only searches all if no timeStamp param has been given
+        let findObj = { };
+
+        db.mirror.find(findObj, function(err, docs) {
+            if(err) {
+                console.err(err);
+            }
+            resolve(docs);
+        })
+    })
+}
+
+exports.makeNewMirror = makeNewMirror;
+exports.getMirror = getMirror;
+
+db.devices = new Datastore({
+    filename: "./database/devices.db", autoload: true,
+})
+db.devices.loadDatabase();
+
+const makeNewDevices = function(devices, groups) {
+    return new Promise((resolve, reject) => {
+
+        db.devices.insert(devices, function(err, docs) {
+            if(!err) {
+                console.log(docs);
+            } else {
+                console.log(err);
+            }
+        })
+    })
+}
