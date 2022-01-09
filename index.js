@@ -52,7 +52,7 @@
 
     var client;
 
-    var worker;
+    var client;
 
     jsonfile.readFile(configfile)
     .then(function(obj) {
@@ -66,6 +66,8 @@
 
         client.subscribe("zigbee2mqtt", function(err, granted) {
             console.log(granted);
+            client.unsubscribe("zigbee2mqtt");
+            client.end();
         })
     });
 
@@ -131,8 +133,8 @@ app.get("/settings", (req, res) => {
 })
 
 
-app.post("/set/:name/:key/:value", (req, res) => {
-    console.log("state change request")
+app.post("/set/:name/:key/:value", async (req, res) => {
+    console.log(`== STATE CHANGE ${req.params.name} ${req.params.key} ${req.params.value} == `)
     let name = req.params.name;
     let state;
     let value;
@@ -162,66 +164,155 @@ app.post("/set/:name/:key/:value", (req, res) => {
 
     console.log(url, state);
 
-    client.publish(url, state , function(err, packet) {
-        //console.log(err, packet);
-        try {
-            console.log("Sending OK")
-            res.sendStatus(200).send();
-        }
-        catch (err) {
-            console.log(err);
-        }
-    })
+    try {
+        await mqttNetwork.sendRequest(url, state);
+        res.status(200);
+    } catch (err) {
+        console.log(err);
+        res.status(500);
+    }
+
+    res.send();
+    console.log("sentResponse");
+
     console.log("====== DONE =====");
+    
 })
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const mqttNetwork = {
+    sendRequest: function(url, body) {
+        return new Promise((resolve, reject) => {
+            client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+            client.on("connect", function() {
+                try {
+                    console.log("Connected");
+                    client.publish(url, body, function(err) {
+                        console.log("published callback");
+                        if(!err) { resolve() } else { reject(err) }
+                        client.end();
+                    })
+                } catch (err) { reject(err)  }
+            })
+        })
+    },
+    getRequest: function(url, type = "packetreceive") {
+        return new Promise((resolve, reject) => {
+            client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+
+            client.on("connect", function() {
+                try {
+                    console.log("Connected, subscribing to:", url);
+                    client.subscribe(url, async function(err, granted) {
+                        console.log("Subscribed", granted);
+                        if(type == "packetreceive") {
+                            await sleep(25);
+                        }
+                        let isRecieved = false;
+
+                        client.on(type, async function(topic, buffer, packet) {
+                            console.log("recieved", topic);
+                            if(!isRecieved) {
+                                try {
+                                    isRecieved = true;
+
+                                    // make message
+                                        let message;
+                                        let jsonMessage;
+
+                                        switch (type) {
+                                                case "packetreceive":
+                                                message = topic.payload.toString();
+                                                let messageArray = function() {
+                                                    message.replace("[", "").replace("]","");
+                                                    return JSON.parse(message);
+                                                };
+                                                jsonMessage = messageArray();
+                                                break;
+                                            case "message":
+                                                jsonMessage = JSON.parse(buffer.toString());
+                                                break;
+                                        }
+                                    //
+    
+                                    resolve(jsonMessage);
+    
+                                    client.unsubscribe(url);
+                                    client.end();
+                                } catch (err) {
+                                    console.log(err);
+                                    reject(err);
+                                }
+                            }
+                        })
+                    })
+                }
+                catch (err) {
+                    console.log(err);
+                    reject(err);
+                }
+            })
+        })
+    }
+}
+
 app.get("/getIndivData/:friendlyName/:attribute", (req,res) => {
-    console.log("Color test");
+    console.log(`=== GETTING ${req.params.friendlyName} ${req.params.attribute} ===`);
 
     const reqFriendlyName = req.params.friendlyName;
     const reqAttribute = req.params.attribute;
     var body = `{"${reqAttribute}": ""}`;
     const url = `zigbee2mqtt/${reqFriendlyName}`;
+    let isSent = false;
 
-    client.end(true);
     client = mqtt.connect(`mqtt://${_IPADDRESS}`);
 
     client.on("connect", function() {
         try {
+            console.log("Connected");
+            client.publish(`${url}/get`, body ,function(err) {
+                console.log("published callback");
 
- 
-
-            client.publish(`${url}/get`, body, { cbStorePut: function() { console.log("cbStorePut"); } } ,function(err) {
-                console.log("Callback");
-        
                 client.subscribe(url, async function(err, granted) {
-                    await sleep(50);
-                    console.log("Slept");
+                    console.log("Subscribed", granted);
+                    await sleep(25);
 
-                    client.on("message", function(topic, buffer, packet) {
-                        console.log("message recieved");
+                    client.on("packetreceive", async function(topic, buffer, packet) {
+                        if(!isSent) {
+                            console.log("Message recieved");
+                            isSent = true;
+                            try {
+                                let message = topic.payload.toString();
+                                let messageArray = function() {
+                                    message.replace("[", "").replace("]","");
+                                    return JSON.parse(message);
+                                };
+                    
+                                let jsonMessage = messageArray();
+        
+                                // callback might be called multiple times with different messages
+                                if(jsonMessage.hasOwnProperty(reqAttribute)) {
+                                    console.log("Is target attribute");
+                                    try {
+                                        res.send(jsonMessage);
+                                        
+                                    } catch (err) {
+                                        console.log("Could not send data", err);
+                                    }
+                                } else {
+                                    console.log("Not target");
+                                }
     
-                        let message = buffer.toString();
-                        let messageArray = function() {
-                            message.replace("[", "").replace("]","");
-                            return JSON.parse(message);
-                        };
-            
-                        let jsonMessage = messageArray();
-            
-                        console.log(topic, buffer.toString(), packet);
-                        
-                        try {
-                            res.send(jsonMessage);
-                        } catch (err) {
-                            console.log("Could not send data ",err);
+                                client.unsubscribe(url);
+                                client.end();
+                            } catch (err) {
+                                console.log(err);
+                                res.status(500).send();
+                            }
                         }
-    
-                        client.unsubscribe(url);
                     })
                 })
             })
@@ -238,128 +329,111 @@ let groups = [];
 app.get("/getGroups", (req, res) => {
     console.log("Getting groups");
 
-    client.end(true);
     client = mqtt.connect(`mqtt://${_IPADDRESS}`);
 
-    if(groups.length > 0) {
-        console.log("using cache");
-        try {
-            console.log("sending groups");
-            res.send(groups);
+    client.on("connect", function() {
+        if(groups.length > 0) {
+            console.log("using cache");
+            try {
+                console.log("sending groups");
+                res.send(groups);
+            }
+            catch (err) {
+                console.log(err);
+            }
+            console.log("====== DONE =======");
         }
-        catch (err) {
-            console.log(err);
-        }
-        console.log("====== DONE =======");
-    }
-    else {
-        let url = `zigbee2mqtt/bridge/groups`
-
-        client.subscribe(url, function(err, granted) {     
-            client.on("message", function(topic, buffer, packet) {
-                let message = buffer.toString();
-                console.log("connected to", topic);
+        else {
+            let url = `zigbee2mqtt/bridge/groups`
     
-                // make array of friendly names
-                const friendlyNames = function() {
-                    let nameArray = [];
-    
-                    // clean message to Array with objects
-                    let messageArray = function() {
-                        message.replace("[", "").replace("]","");
-                        return JSON.parse(message);
-                    };
-                    
-                    // get friendly_names out and return them in a new array
-                    messageArray().forEach(function(group) {
+            client.subscribe(url, function(err, granted) {     
+                client.on("message", function(topic, buffer, packet) {
+                    let message = buffer.toString();
+                    console.log("connected to", topic);
+        
+                    // make array of friendly names
+                    const friendlyNames = function() {
+                        let nameArray = [];
+        
+                        // clean message to Array with objects
+                        let messageArray = function() {
+                            message.replace("[", "").replace("]","");
+                            return JSON.parse(message);
+                        };
                         
-                        // dont insert default bind group
-                        if(group.friendly_name != "default_bind_group") {
-                            nameArray.push(group.friendly_name);
-                        }
-                    })
-                    return nameArray;
-                }
-                const names = friendlyNames();
-                console.log(names);
-                try {
-                    console.log("Sending names");
-                    res.send(names);
-                }
-                catch (err) {
-                    console.log(err);
-                }
-                groups = names;
-                console.log("====== DONE =======");
-                //client.end();
-                client.unsubscribe(url);
+                        // get friendly_names out and return them in a new array
+                        messageArray().forEach(function(group) {
+                            
+                            // dont insert default bind group
+                            if(group.friendly_name != "default_bind_group") {
+                                nameArray.push(group.friendly_name);
+                            }
+                        })
+                        return nameArray;
+                    }
+                    const names = friendlyNames();
+                    console.log(names);
+                    try {
+                        console.log("Sending names");
+                        res.send(names);
+                    }
+                    catch (err) {
+                        console.log(err);
+                    }
+                    groups = names;
+                    console.log("====== DONE =======");
+                    
+                    client.unsubscribe(url);
+                    client.end();
+                })
             })
-        })
-    }
+        }
+    })
 })
 
 // gets data from bridge
-app.get("/getData/:topic", (req, res) => {
+app.get("/getData/:topic", async (req, res) => {
     console.log("Getting data from topic");
     let topicsArray = req.params.topic.split("&");
     //console.log(topicsArray);
 
     const topic = topicsArray.join().replace(",", "/");
+    const url = `zigbee2mqtt/${topic}`;
 
-    worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
-
-    worker.on("connect", function() {
-        const url = `zigbee2mqtt/${topic}`;
-        console.log(`Getting data from ${url}`);
+    try {
+        const data = await mqttNetwork.getRequest(url, "message");
+        res.send(data);
+    } 
+    catch (err) {
+        console.log("Error at getData/", topic, "Err or not granted");
+        console.log(err);
+        res.status(500).send();
+    }
     
-        worker.subscribe(url, function(err, granted) {   
-            
-            if(granted == undefined || err) {
-                console.log("Error at getData/", topic, "Err or not granted");
-                console.log(err);
-            }
     
-            worker.on("message", function(resTopic, buffer, packet) {
-                let message = JSON.parse(buffer.toString());
-                console.log("connected to", topic);
-
-                try {
-                    console.log("Sent message");
-                    res.send(message);
-                }
-                catch (err) {
-                    console.log("Error at getData/", topic, "message could not be sent");
-                    console.log(err);
-                }
-
-                worker.unsubscribe(topic);
-                worker.end();
-                console.log("====== DONE =======");
-            })
-        })
-    })
 })
 
 app.get("/refreshMirror", function(req,res) {
   console.log("Refreshing cached data...");
 
   console.log("Connecting to MQTT broker...");
-  worker = mqtt.connect(`mqtt://${_IPADDRESS}`);
+  client = mqtt.connect(`mqtt://${_IPADDRESS}`);
   
-  worker.on("connect", function() {
+  client.on("connect", function() {
     const topic = "bridge/devices";
     const url = `zigbee2mqtt/${topic}`;
     console.log("Connected, getting data...");
 
-    worker.subscribe(url, function(err, granted) {
+    client.subscribe(url, function(err, granted) {
         if(granted == undefined || err) {
             console.log("Could not subscribe to topic!", url, err);
         } else {
-            worker.on("message", function(resTopic, buffer, packer) {
+            client.on("message", function(resTopic, buffer, packer) {
                 let message = JSON.parse(buffer.toString());
                 console.log("Got message, connection fully established.");
 
-                worker.unsubscribe(topic);
+                client.unsubscribe(topic);
+                client.end();
 
                 try {
                     database.makeNewMirror(message).then(function(dataRes) {
@@ -421,24 +495,23 @@ app.get("/getScenes", (req, res) => {
 
 
 // executes scene
-app.get("/scene/:groupName/:sceneId", (req, res) => {
-    console.log("executing scene")
-    let url = `zigbee2mqtt/${req.params.groupName}/set`
+app.get("/scene/:groupName/:sceneId", async (req, res) => {
+    console.log("=== EXEC SCENE", req.params.groupName, req.params.sceneId, "===");
 
-    let msg = `{"scene_recall": ${req.params.sceneId}}`
+    let url = `zigbee2mqtt/${req.params.groupName}/set`
+    let state = `{"scene_recall": ${req.params.sceneId}}`
 
     // set scene
-    client.publish(url, msg, function(err, packet) {
-        //console.log(err, packet); 
-        try {
-            console.log("Sending scene ok");
-            res.status(200).send();
-        }
-        catch (err) {
-            console.log(err);
-        }
-        console.log("======== DONE ========")
-    })
+    try {
+        await mqttNetwork.sendRequest(url, state);
+        res.status(200);
+    } catch (err) {
+        console.log(err);
+        res.status(500);
+    }
+
+    res.send();
+    console.log("=== DONE ===");
 })
 
 // updates program

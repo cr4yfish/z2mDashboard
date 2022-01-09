@@ -125,11 +125,19 @@ function getScenes() {
 
 function makeSceneBox(parent, scene) {
     console.log("=== MAKING SCENE BOX ===");
-
+        const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+            
         let box = document.createElement("div");
             box.setAttribute("class", "lightBox sceneBox swiper-slide");
             box.setAttribute("onclick", `setScene("${scene.group}", "${scene.id}")`);
             box.setAttribute("anim", "ripple");
+            box.style.backgroundColor = `${randomColor}`;
+
+            if(lightOrDark(randomColor) == "light") {
+                box.style.color = "black"
+            } else {
+                box.style.color = "white"
+            }
 
             let icon = document.createElement("i");
                 icon.setAttribute("class", "fas fa-play")

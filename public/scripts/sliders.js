@@ -43,6 +43,7 @@ function makeSliders(set) {
 
 function makeSlider(friendlyName) {
     return new Promise(async (resolve, reject) => {
+        
 
         let light = document.getElementById(friendlyName);
 

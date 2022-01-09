@@ -460,12 +460,16 @@ a.active {
     flex-direction: row;
 }
 
+.lightBoxStateWrapper {
+    color: inherit;
+}
+
 .lightBox:last-of-type {
     margin: 0
 }
 
 .lightBox span, .lightBox i  {
-    color: white;
+    color: inherit;
     font-size: 10pt;
 }
 

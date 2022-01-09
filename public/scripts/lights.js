@@ -149,6 +149,7 @@ function getGroups() {
             parent.appendChild(makeLightSlider(group, { state: true, color: randomColor, openGroup: true }));
 
             await makeSlider(group);
+            await refreshData(group);
             
         })
     })
@@ -161,7 +162,7 @@ function getGroups() {
         .then(data => data.json())
 
         .then(function(data) {
-            console.log(data);
+            console.log("bridge&Devices response:",data);
 
             // sort out lights
 
@@ -177,14 +178,15 @@ function getGroups() {
                     //console.log(e);
                 }
             })
-
-            console.log(lights);
+            localStorage.setItem("lights", JSON.stringify(lights));
+            console.log("getGroups final lights array: ",lights);
 
             const parent = document.querySelector("#lastUsed .swiper-wrapper");
 
-            lights.forEach(function(light) {
+            lights.forEach(async function(light) {
 
                 parent.appendChild(makeLightBox(light));
+                await refreshData(light.friendly_name, "lightBox");
                 
               
             })
@@ -232,12 +234,26 @@ function openGroup(friendlyName) {
 
         console.group("Open group algorithm");
         console.log(group);
-        group.members.forEach(member => {
+        group.members.forEach(async member => {
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+            let friendlyName = "";
+            // get friendlyName from ieee address
+            const lightsArray = JSON.parse(localStorage.getItem("lights"));
+            lightsArray.forEach(light => {
+                
+                if(light.ieee_address == member.ieee_address) {
+                    // hit
+                    console.log("open group algo light:", light);
+                    friendlyName = light.friendly_name;
+                }
+            })
 
-            devices.appendChild(makeLightSlider(member.ieee_address, {state: true, color: randomColor, openGroup: false}));
-
-            makeSlider(member.ieee_address);
+            if(friendlyName.length > 0) {
+                devices.appendChild(makeLightSlider(member.friendlyName, {state: true, color: randomColor, openGroup: false}));
+                await makeSlider(member.friendlyName);
+                await refreshData(member.friendlyName);
+            }
+        
         })
 
         group.scenes.forEach(scene => {
@@ -258,7 +274,6 @@ function openGroup(friendlyName) {
     })
 
     .then(function() {
-        //makeSliders();
         makeSwiper();
     })
 
@@ -330,7 +345,8 @@ function stopProp() {
 
 // returns LightSlider, needs options for toggling etc, icon is optional
 function makeLightSlider(friendlyName, options = {} ,icon = "") {
- 
+    console.group("make light slider");
+    console.log(friendlyName, options, icon);
     let lightcard = document.createElement("div");
         lightcard.setAttribute("id", friendlyName);
         lightcard.setAttribute("class", "card light-card");
@@ -446,141 +462,161 @@ function makeSwiper() {
     });
 }
 
-function refreshData(element = "all") {
-    // make array of friendly names that are present
-    // for every name, make a fetch call to /getData/:friendlyname
-    // read brightness and color data and update sliders and colors
-    console.log("refreshData")
-    let elements;
-    let nameArray = [];
+function refreshData(element = "all", type = "slider") {
+    return new Promise(async(resolve, reject)  => {
+        console.log("refreshing Data", element)
 
+        let elements;
+        let nameArray = [];
+    
+        if(element == "all") {
+            elements = document.querySelectorAll(".lightSlider");
+            elements.forEach(function(element) {
+                nameArray.push(element.id)
+            })
+        } else {
+            // only single element
+            nameArray.push(element);
+        }
+    
+        console.log(nameArray);
+    
+        for(let i = 0; i < nameArray.length; i++) {
+            let light = nameArray[i];
+    
+            console.log("Getting color");
+            let rgbColor = await getColorOfFriendlyName(light);
+    
+            console.log("Changing color");
+            await changeColorOfSlider(light, rgbColor, type);
+    
+            await sleep(1000);
+        }
+    })
+}
 
-    if(element == "all") {
-        elements = document.querySelectorAll(".lightSlider");
-        elements.forEach(function(element) {
-            nameArray.push(element.id)
-        })
-    } else {
-        // only single element
-        elements = document.querySelector(`#${element}`).id;
-        nameArray.push(elements);
-    }
+function changeColorOfSlider(friendlyName, color, type = "slider") {
+    return new Promise((resolve, reject) => {
+        console.group(friendlyName);
+        let idELe = document.getElementById(`${friendlyName}`);
+        let colorEle; 
 
-    for(let i = 0; i < nameArray.length; i++) {
-        console.group("REFRESH DATA FOR:", nameArray[i])
-        let group = nameArray[i];
-        console.log("refreshing for", group);
-
-        getColorOfFriendlyName(group)
-
-        .then(function(rgbColor) {
-            console.log("resonse:");
-            console.log(rgbColor);
-
-            let idELe = document.getElementById(`${group}`);
-            let slider = idELe.querySelector(`.lightSlider`);
-            let sliderColor = idELe.querySelector(`.noUi-connects`);
-
-            console.log("Slider:", slider);
-
-            // change color of slider
-                if(rgbColor != undefined) {
-                    console.log("Color:", rgbColor);
-                    sliderColor.style.background = `${rgbColor}`;
-                    sliderColor.style.boxShadow = `0px 0px 30px ${rgbColor})}`
-
-                } 
-                 else {
-                    // light is off or not reachable
-                    sliderColor.style.background = "#333333";
-                }
-
-            // change color of label
-            let label = document.querySelector(`#${group} label`)
-
-            if(lightOrDark(rgbColor) == "light") {
-                label.style.color = "black"
-            } else {
-                label.style.color = "white"
+        if(type == "slider") {
+            colorEle = idELe.querySelector(`.noUi-connects`);
+        } else {
+            colorEle = idELe;
+        }
+    
+        console.log("light:", friendlyName);
+    
+        // change color of slider
+            if(color != undefined) {
+                console.log("Color:", color);
+                colorEle.style.background = `${color}`;
+                colorEle.style.boxShadow = `0px 0px 30px ${color})}`
+    
+            } 
+             else {
+                // light is off or not reachable
+                colorEle.style.background = "#333333";
             }
-                
-            console.log("==== DONE =====")
-            console.groupEnd();
-        })
-    }
+
+        // change color of label
+        let label;
+       
+        if(type == "slider") {
+            label = document.querySelector(`#${friendlyName} label`);
+        } else {
+            label = document.getElementById(`${friendlyName}`);
+        }
+        
+        if(lightOrDark(color) == "light") {
+            label.style.color = "black"
+        } else {
+            label.style.color = "white"
+        }
+
+        console.groupEnd();
+
+        resolve();
+    })
 }
 
 function getColorOfFriendlyName(friendlyName) {
-    return new Promise((resolve, reject) => {
-        let url = `${HOST}/getIndivData/${friendlyName}`;
+    return new Promise(async (resolve, reject) => {
+        
+        let colorObj = await getIndivData(friendlyName, "color");
+        colorObj = colorObj.color;
+        //let brightness = await getIndivData(friendlyName, "brightness");
 
-        fetch(`${url}/color`).then(res => res.json()).then(function(response) {
-            console.log("Color obj: ", response.color);
-    
-            let colorObj = response.color;
-    
-            fetch(`${url}/brightness`).then(res => res.json()).then(function(brightnessRes) {
-                let brightness = brightnessRes.brightness;
+        let rgbColor = await xyBriToRgb(colorObj.x, colorObj.y, 254);
 
-                const valObj = {
-                    x: colorObj.x,
-                    y: colorObj.y,
-                    bri: brightness,
-                }
-
-                console.log(valObj, typeof valObj.x, typeof valObj.y, typeof valObj.bri);
-
-                let rgbColor = xyBriToRgb(valObj.x, valObj.y, 254);
-                resolve(rgbColor);
-            })
-    
-        })
+        console.log(rgbColor);
+        resolve(rgbColor);
+       
     })
-
 }
 
+function getIndivData(friendlyName, attribute) {
+    return new Promise((resolve, reject) => { 
+        const url = `${HOST}/getIndivData/${friendlyName}/${attribute}`;
+
+        fetch(url).then(res => res.json()).then((res) => {
+           
+            if(!res.hasOwnProperty(attribute)) {
+                // didn't work, try again
+                getIndivData(friendlyName, attribute);
+            } else {
+                resolve(res);
+            }
+        })
+
+    })
+}
 
 async function serviceWorker() {
     console.log("service worker");
-    //refreshData();
-    //await sleep(refreshTime*1000*3);
+    //await sleep(7500);
     //serviceWorker()
 }
 
 function xyBriToRgb(x, y, bri)
 {
-    z = 1.0 - x - y;
+    return new Promise((resolve, reject) => {
+        z = 1.0 - x - y;
 
-    var Y = bri / 255.0; // Brightness of lamp
-    var X = (Y / y) * x;
-    var Z = (Y / y) * z;
-    var r = X * 1.612 - Y * 0.203 - Z * 0.302;
-    var g = -X * 0.509 + Y * 1.412 + Z * 0.066;
-    var b = X * 0.026 - Y * 0.072 + Z * 0.962;
-    var r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
-    var g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
-    var b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
-    var maxValue = Math.max(r,g,b);
-    r /= maxValue;
-    g /= maxValue;
-    b /= maxValue;
-    r = r * 255;   if (r < 0) { r = 255 };
-    g = g * 255;   if (g < 0) { g = 255 };
-    b = b * 255;   if (b < 0) { b = 255 };
-
-    r = Math.round(r).toString(16);
-    g = Math.round(g).toString(16);
-    b = Math.round(b).toString(16);
-
-    if (r.length < 2)
-        r="0"+r;        
-    if (g.length < 2)
-        g="0"+g;        
-    if (b.length < 2)
-        b="0"+r;        
-    rgb = "#"+r+g+b;
-
-    return rgb;             
+        var Y = bri / 255.0; // Brightness of lamp
+        var X = (Y / y) * x;
+        var Z = (Y / y) * z;
+        var r = X * 1.612 - Y * 0.203 - Z * 0.302;
+        var g = -X * 0.509 + Y * 1.412 + Z * 0.066;
+        var b = X * 0.026 - Y * 0.072 + Z * 0.962;
+        var r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
+        var g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
+        var b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
+        var maxValue = Math.max(r,g,b);
+        r /= maxValue;
+        g /= maxValue;
+        b /= maxValue;
+        r = r * 255;   if (r < 0) { r = 255 };
+        g = g * 255;   if (g < 0) { g = 255 };
+        b = b * 255;   if (b < 0) { b = 255 };
+    
+        r = Math.round(r).toString(16);
+        g = Math.round(g).toString(16);
+        b = Math.round(b).toString(16);
+    
+        if (r.length < 2)
+            r="0"+r;        
+        if (g.length < 2)
+            g="0"+g;        
+        if (b.length < 2)
+            b="0"+r;        
+        rgb = "#"+r+g+b;
+    
+        resolve(rgb);
+    })
+          
 }
 
 function invertColor(inColor) {
