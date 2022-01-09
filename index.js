@@ -175,12 +175,71 @@ app.post("/set/:name/:key/:value", (req, res) => {
     console.log("====== DONE =====");
 })
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+app.get("/getIndivData/:friendlyName/:attribute", (req,res) => {
+    console.log("Color test");
+
+    const reqFriendlyName = req.params.friendlyName;
+    const reqAttribute = req.params.attribute;
+    var body = `{"${reqAttribute}": ""}`;
+    const url = `zigbee2mqtt/${reqFriendlyName}`;
+
+    client.end(true);
+    client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+
+    client.on("connect", function() {
+        try {
+
+ 
+
+            client.publish(`${url}/get`, body, { cbStorePut: function() { console.log("cbStorePut"); } } ,function(err) {
+                console.log("Callback");
+        
+                client.subscribe(url, async function(err, granted) {
+                    await sleep(50);
+                    console.log("Slept");
+
+                    client.on("message", function(topic, buffer, packet) {
+                        console.log("message recieved");
+    
+                        let message = buffer.toString();
+                        let messageArray = function() {
+                            message.replace("[", "").replace("]","");
+                            return JSON.parse(message);
+                        };
+            
+                        let jsonMessage = messageArray();
+            
+                        console.log(topic, buffer.toString(), packet);
+                        
+                        try {
+                            res.send(jsonMessage);
+                        } catch (err) {
+                            console.log("Could not send data ",err);
+                        }
+    
+                        client.unsubscribe(url);
+                    })
+                })
+            })
+        }
+        catch (err) {
+            console.log(err);
+        }
+    })
+})
 
 let groups = [];
 
 // get groups
 app.get("/getGroups", (req, res) => {
     console.log("Getting groups");
+
+    client.end(true);
+    client = mqtt.connect(`mqtt://${_IPADDRESS}`);
 
     if(groups.length > 0) {
         console.log("using cache");

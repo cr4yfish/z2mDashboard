@@ -469,37 +469,36 @@ function refreshData(element = "all") {
     for(let i = 0; i < nameArray.length; i++) {
         console.group("REFRESH DATA FOR:", nameArray[i])
         let group = nameArray[i];
-        let url = `${HOST}/getData/${group}`;
-        console.log("refreshing for", group, "data from", url);
-        fetch(url)
-        .then(res => res.json())
-        .then(function(response) {
+        console.log("refreshing for", group);
+
+        getColorOfFriendlyName(group)
+
+        .then(function(rgbColor) {
             console.log("resonse:");
-            console.log(response);
-            let brightness = response.brightness;
-            let color = response.color;
-            // update corresponding slider
-            console.log("got brightness", typeof brightness, brightness, "for", group)
-            let slider = document.querySelector(`#${group} .lightSlider`);
-    
-            slider.noUiSlider.set([0,brightness.toString()]);
+            console.log(rgbColor);
+
+            let idELe = document.getElementById(`${group}`);
+            let slider = idELe.querySelector(`.lightSlider`);
+            let sliderColor = idELe.querySelector(`.noUi-connects`);
+
+            console.log("Slider:", slider);
 
             // change color of slider
-            let sliderColor = slider.querySelector(".noUi-connect");
-                if(color != undefined) {
-                    //sliderColor.style.background = xyBriToRgb(color.x, color.y, brightness);
-                    //sliderColor.style.boxShadow = `0px 0px 30px ${xyBriToRgb(color.x, color.y, brightness)}`
+                if(rgbColor != undefined) {
+                    console.log("Color:", rgbColor);
+                    sliderColor.style.background = `${rgbColor}`;
+                    sliderColor.style.boxShadow = `0px 0px 30px ${rgbColor})}`
 
                 } 
                  else {
                     // light is off or not reachable
-                    //sliderColor.style.background = "#ffffff";
+                    sliderColor.style.background = "#333333";
                 }
 
             // change color of label
             let label = document.querySelector(`#${group} label`)
 
-            if(lightOrDark(document.getElementById(group).querySelector(".noUi-connect").style.background) == "light") {
+            if(lightOrDark(rgbColor) == "light") {
                 label.style.color = "black"
             } else {
                 label.style.color = "white"
@@ -509,6 +508,35 @@ function refreshData(element = "all") {
             console.groupEnd();
         })
     }
+}
+
+function getColorOfFriendlyName(friendlyName) {
+    return new Promise((resolve, reject) => {
+        let url = `${HOST}/getIndivData/${friendlyName}`;
+
+        fetch(`${url}/color`).then(res => res.json()).then(function(response) {
+            console.log("Color obj: ", response.color);
+    
+            let colorObj = response.color;
+    
+            fetch(`${url}/brightness`).then(res => res.json()).then(function(brightnessRes) {
+                let brightness = brightnessRes.brightness;
+
+                const valObj = {
+                    x: colorObj.x,
+                    y: colorObj.y,
+                    bri: brightness,
+                }
+
+                console.log(valObj, typeof valObj.x, typeof valObj.y, typeof valObj.bri);
+
+                let rgbColor = xyBriToRgb(valObj.x, valObj.y, 254);
+                resolve(rgbColor);
+            })
+    
+        })
+    })
+
 }
 
 
@@ -523,16 +551,16 @@ function xyBriToRgb(x, y, bri)
 {
     z = 1.0 - x - y;
 
-    Y = bri / 255.0; // Brightness of lamp
-    X = (Y / y) * x;
-    Z = (Y / y) * z;
-    r = X * 1.612 - Y * 0.203 - Z * 0.302;
-    g = -X * 0.509 + Y * 1.412 + Z * 0.066;
-    b = X * 0.026 - Y * 0.072 + Z * 0.962;
-    r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
-    g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
-    b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
-    maxValue = Math.max(r,g,b);
+    var Y = bri / 255.0; // Brightness of lamp
+    var X = (Y / y) * x;
+    var Z = (Y / y) * z;
+    var r = X * 1.612 - Y * 0.203 - Z * 0.302;
+    var g = -X * 0.509 + Y * 1.412 + Z * 0.066;
+    var b = X * 0.026 - Y * 0.072 + Z * 0.962;
+    var r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
+    var g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
+    var b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
+    var maxValue = Math.max(r,g,b);
     r /= maxValue;
     g /= maxValue;
     b /= maxValue;
