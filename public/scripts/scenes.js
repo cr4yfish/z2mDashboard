@@ -5,7 +5,6 @@ function getGroups() {
     .then(response => response.json())
 
     .then(function(groups) {
-        console.log(groups);
 
         groups.forEach(function(group) {
             
@@ -42,8 +41,6 @@ function getGroups() {
 
 
 function setScene(group, sceneId, bri=254) {
-    console.log(`Settings scene: ${group}, ${sceneId}`)
-
     // set scene
     let url = `${HOST}/scene/${group}/${sceneId}`;
 
@@ -51,22 +48,12 @@ function setScene(group, sceneId, bri=254) {
     .then(function (response) {
         console.log(response);
     })
-
-    /* set brightness
-    url = `${HOST}/set/${group}/brightness/${bri}`;
-    fetch(url)
-    .then(function (response) {
-        console.log(response);
-    })*/
 }
 
 function saveCurrentScene(buttonE) {
-    console.log("saving current scene");
-
     let sceneName = document.getElementById("sceneNameInput").value.replace("/","&");
     // replace "/", otherwise API will get it wrong
     let sceneGroup = buttonE.dataset.friendlyname;
-    console.log(sceneName, sceneGroup);
     
 
     // get brightness
@@ -74,7 +61,6 @@ function saveCurrentScene(buttonE) {
     fetch(url)
     .then(res => res.json())
     .then(function (response) {
-        console.log(response)
         let brightness = response.brightness;
         
         if(brightness == undefined) {
@@ -90,7 +76,6 @@ function saveCurrentScene(buttonE) {
     
         fetch(url, options)
         .then(function(response) {
-            console.log(response);
             closeOverlay();
             getScenes();
         })
@@ -104,27 +89,18 @@ function getScenes() {
         fetch(url)
         .then(response => response.json())
         .then(function(response) {
-            console.log(response);
-            
-            console.log("=== REMOVING OLD SCENE BOXES ===")
-    
-                // remove old data
-                console.log("sceneboxes:", document.querySelectorAll(".sceneBox").length)
     
                 let oldItems = document.querySelectorAll(".sceneBox")
     
                 for(let i = oldItems.length-1; i >= 0; i--) {
-                    console.log(oldItems[i]);
                     oldItems[i].remove();
                 }
             resolve(response);
-            console.log("=== DONE ===")
         })
     })
 }
 
 function makeSceneBox(parent, scene) {
-    console.log("=== MAKING SCENE BOX ===");
         const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
             
         let box = document.createElement("div");
@@ -149,7 +125,6 @@ function makeSceneBox(parent, scene) {
 
         parent.appendChild(box);
 
-    console.log("=== DONE ===");
 }
 
 function groupScene() {

@@ -4,8 +4,6 @@ function makeSliders(set) {
     let lightSliders = document.querySelectorAll(".lightSlider");
 
     lightSliders.forEach(function (light) {
-        //var slider = document.getElementById("slider");
-    
         noUiSlider.create(light, {
             start: [0, 254],
             step: 1,
@@ -20,9 +18,7 @@ function makeSliders(set) {
         var origins = light.getElementsByClassName('noUi-origin');
         origins[0].setAttribute('disabled', true);
     
-    
         light.noUiSlider.on("change", function( values, handle) {
-            console.log("Changing brightness for", light, light.getAttribute("id"));
             let value = parseInt(values[1])
             //let url = HOST+"/set/"+ light.getAttribute("id") +"/"+value+"/brightness";
             let url = `${HOST}/set/${light.getAttribute("id")}/brightness/${value}`;
@@ -36,15 +32,11 @@ function makeSliders(set) {
                 //refreshData(light.id);
             })
         })
-    
-    
     })
 }
 
 function makeSlider(friendlyName) {
     return new Promise(async (resolve, reject) => {
-        
-
         let light = document.getElementById(friendlyName);
 
         noUiSlider.create(light, {
@@ -60,12 +52,8 @@ function makeSlider(friendlyName) {
     
         var origins = light.getElementsByClassName('noUi-origin');
         origins[0].setAttribute('disabled', true);
-    
-    
         await makeEvenListener(light);
-
         resolve();
-
     })
 }
 

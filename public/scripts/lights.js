@@ -1,41 +1,24 @@
 
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // refresh time should be 1second for each group
 let refreshTime = 0;
 
 function toggleLightState(friendlyName) {
-
-    const url = `${HOST}/set/${friendlyName}/state/toggle`;
-
-    const options = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    }
+    console.log("toggling light state", friendlyName);
+    const url = `${HOST}/set/${friendlyName}/state/toggle`,
+        options = { method: "POST", headers: { "Content-Type": "application/json" } }
 
     fetch(url, options)
-    .then(function (response) {
-
-    })
+    .then(function (response) {} )
 }
 
 function getDataFromBridge(friendlyName) {
-    
     const url = `${HOST}/getData/${friendlyName}`;
     console.log("Getting data from bridge from:", url);
     fetch(url)
     .then(res => res.json())
-
     .then(function (response) {
-
         return response;
     })
-
 }
 
 (function colorPickerSetup() {
@@ -53,11 +36,10 @@ function getDataFromBridge(friendlyName) {
                 }
             }
         ]
-
     })
 
     picker.on("input:end", function(color) {
-
+        console.log("input end");
         // get id
         const friendlyName = document.getElementById("colorPickerLightName").textContent;
         const colorString = color.hexString.replace("#","");
@@ -70,39 +52,28 @@ function getDataFromBridge(friendlyName) {
         if(sliderColor != undefined) {
             if(color != undefined) {
                 sliderColor.style.background = `${color.hexString}`;
-                slider.style.boxShadow = `0px 0px 30px ${color.hexString}`
-    
+                slider.style.boxShadow = `0px 0px 30px ${color.hexString}`;
             } else {
                 // light is off or not reachable
                 sliderColor.style.background = "#333333";
             }
     
             // change color of label
-            let label = idELe.querySelector(`label`)
+            let label = idELe.querySelector(`label`);
     
             if(lightOrDark(color.hexString) == "light") {
-                label.style.color = "black"
+                label.style.color = "black";
             } else {
-                label.style.color = "white"
+                label.style.color = "white";
             }
-    
         }
-
 
         // send data to backend
         const url = `${HOST}/set/${friendlyName}/color/${colorString}`;
-
-        const options = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        }
+        const options = { method: "POST", headers: {  "Content-Type": "application/json" } }
 
         fetch(url, options)
         .then(function (response) {
-
-   
         })
     })
 })();
@@ -115,71 +86,58 @@ function colorOverlay(id) {
 function colorPicker(id) {
     document.getElementById("colorPicker").style.display = "flex";
     document.getElementById("colorPickerLightName").textContent = id;
-
     colorOverlay();
-    
 }
 
 function closeOverlay() {
     document.getElementById("colorOverlay").style.display = "none";
     document.getElementById("colorPicker").style.display = "none";
     document.getElementById("sceneSaver").style.display = "none";
-
     try {
         document.getElementById("menu").style.width = "0";
         document.getElementById("menuOpener").style.opacity = "1";
     } catch (e) {
         console.log(e);
     }
-
 }
 
 function getGroups() {
+    console.log("getting groups");
     const url = `${HOST}/getGroups`;
     fetch(url)
     .then(response => response.json())
 
     .then(function(groups) {
-        console.log(groups);
         groups.forEach(async function(group) {
             refreshTime++
-            const parent = document.getElementById("groups");
-            const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+            const parent = document.getElementById("groups"),
+                randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
             parent.appendChild(makeLightSlider(group, { state: true, color: randomColor, openGroup: true }));
 
             await makeSlider(group);
             await refreshData(group);
-            
         })
     })
     // make lights
     .then(function() {
-        console.log("Gettings devices data")
-
+        console.log("Getting devices data")
         let url = `${HOST}/getData/bridge&devices`
         fetch(url)
         .then(data => data.json())
-
         .then(function(data) {
-            console.log("bridge&Devices response:",data);
-
             // sort out lights
-
             let lights = [];
-
             data.forEach(function(item) {
                 try {
                     if (item.definition.exposes[0].type == "light") {
                         lights.push(item);
                     }
-                }
-                catch (e) {
+                } catch (e) {
                     //console.log(e);
                 }
             })
             localStorage.setItem("lights", JSON.stringify(lights));
-            console.log("getGroups final lights array: ",lights);
 
             const parent = document.querySelector("#lastUsed .swiper-wrapper");
 
@@ -187,23 +145,16 @@ function getGroups() {
 
                 parent.appendChild(makeLightBox(light));
                 await refreshData(light.friendly_name, "lightBox");
-                
-              
             })
-
         })
-
         // finish setup
         .then(function () {
             makeSwiper();
-            //makeSliders();
             setRipple();
             dashboardScene()
-            serviceWorker();
         })
     })
 }
-
 
 function openGroup(friendlyName) {
     console.log("Opening group screen", friendlyName);
@@ -212,28 +163,12 @@ function openGroup(friendlyName) {
     GroupScreen.querySelector(".GroupScreenTitle h2").textContent = friendlyName;
     GroupScreen.querySelector(".saveSceneBtn").dataset.friendlyname = friendlyName;
 
-    const devices = document.getElementById("GroupScreenLights");
-    const scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper");
+    const devices = document.getElementById("GroupScreenLights"),
+            scenes = document.querySelector("#GroupScreenScenes .swiper-wrapper");
 
     // foo data -> true, makes random data
     getGroupData(friendlyName).then(function(group) {
-
-        /*
-        const exampleData = {
-            friendly_name: "Name",
-            members: [{
-                endpoint: 11,
-                ieee_address: "0x32322",
-            }],
-            scenes: [{
-                id: 30,
-                name: "scene name",
-            }],
-        }
-        */
-
-        console.group("Open group algorithm");
-        console.log(group);
+        console.log("Group:", group);
         group.members.forEach(async member => {
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
             let friendlyName = "";
@@ -243,7 +178,6 @@ function openGroup(friendlyName) {
                 
                 if(light.ieee_address == member.ieee_address) {
                     // hit
-                    console.log("open group algo light:", light);
                     friendlyName = light.friendly_name;
                 }
             })
@@ -253,10 +187,10 @@ function openGroup(friendlyName) {
                 await makeSlider(member.friendlyName);
                 await refreshData(member.friendlyName);
             }
-        
         })
 
         group.scenes.forEach(scene => {
+            console.log("SCEENES");
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
             
             scenes.appendChild(makeLightBox(
@@ -268,18 +202,15 @@ function openGroup(friendlyName) {
                 state: false,
                 }
             ));
-
         })
-        console.groupEnd();
     })
-
     .then(function() {
         makeSwiper();
     })
-
 }
 
 function closeGroup() {
+    console.log("close group");
     const GroupScreen = document.getElementById("GroupScreen");
     GroupScreen.style.display = "none";
 
@@ -294,14 +225,11 @@ function closeGroup() {
     for(let i = scenes.length-1; i >= 0; i--) {
         scenes[i].remove();
     }
-
 }
 
 // returns LightBox (can also make a scene box), needs friendlyName, default actions is toggle Light state, default icon is lightbulb
 function makeLightBox(deviceObj, options = {icon: "fa-lightbulb", action: "toggleLightState(this.id)",  state: true}) {
-    console.group("MakeLightBox");
-
-    console.log(deviceObj, options);
+    console.log("MakeLightBox", deviceObj);
 
     let friendlyName = deviceObj.friendly_name;
 
@@ -334,19 +262,12 @@ function makeLightBox(deviceObj, options = {icon: "fa-lightbulb", action: "toggl
                 lightSettings.setAttribute("onclick", `stopProp(this); colorPicker('${friendlyName}')`);
             stateWrapper.appendChild(lightSettings);
         }
-  
-    console.groupEnd();
     return lightBox;
 }
 
-function stopProp() {
-    this.event.stopPropagation();
-}
-
 // returns LightSlider, needs options for toggling etc, icon is optional
-function makeLightSlider(friendlyName, options = {} ,icon = "") {
-    console.group("make light slider");
-    console.log(friendlyName, options, icon);
+function makeLightSlider(friendlyName, options = {}, icon = "") {
+    console.log("make light slider", friendlyName);
     let lightcard = document.createElement("div");
         lightcard.setAttribute("id", friendlyName);
         lightcard.setAttribute("class", "card light-card");
@@ -396,108 +317,68 @@ function makeLightSlider(friendlyName, options = {} ,icon = "") {
                                 openGroup.setAttribute("onclick", `openGroup('${friendlyName}')`);
                             extraStateDiv.appendChild(openGroup);
                         }
-                        
     return lightcard;
 }
 
 function getGroupData(groupFriendlyName, fooData = false) {
     return new Promise((resolve, reject) => {
         console.log("Getting group data:", groupFriendlyName);
-
         const url = `${HOST}/getData/bridge&groups`;
         
-        if(!fooData) {
-            fetch(url).then(res => res.json())
-            .then(function(res) {
-                let Group = { };
+        fetch(url).then(res => res.json())
+        .then(function(res) {
+            let Group = { };
 
-                console.log(res);
-                res.forEach(function(group) {
-                    if(group.friendly_name == groupFriendlyName) {
-
-                        Group = {
-                            friendlyName: group.friendly_name,
-                            scenes: group.scenes,
-                            members: group.members,
-                        }
-
+            res.forEach(function(group) {
+                if(group.friendly_name == groupFriendlyName) {
+                    Group = {
+                        friendlyName: group.friendly_name,
+                        scenes: group.scenes,
+                        members: group.members,
                     }
-                })
-    
-                resolve(Group);
+                }
             })
-        } else {
-            // random
-            var randomNumber = getRandomNumber();
-            Group = {
-                friendlyName: arrayOfRandomNames[randomNumber],
-                scenes: [],
-                members: [],
-            }
-            
-            for(i = 0; i < 7; i++) {
-
-                randomNumber = getRandomNumber();
-                Group.scenes.push({
-                    name: arrayOfRandomNames[randomNumber],
-                    scene_id: getRandomNumber(50),
-                })
-
-                randomNumber = getRandomNumber();
-                Group.members.push({
-                    friendly_name: arrayOfRandomNames[randomNumber],
-                })
-            }
-
             resolve(Group);
-        }
-        
+        })
     })
-}
-
-function makeSwiper() {
-    const swiper = new Swiper('.swiper', {
-        direction: "horizontal",
-        loop: false,
-    });
 }
 
 function refreshData(element = "all", type = "slider") {
     return new Promise(async(resolve, reject)  => {
-        console.log("refreshing Data", element)
+        console.log("refreshing Data", element);
 
-        let elements;
-        let nameArray = [];
+        let elements, nameArray = [];
     
         if(element == "all") {
             elements = document.querySelectorAll(".lightSlider");
             elements.forEach(function(element) {
-                nameArray.push(element.id)
+                nameArray.push(element.id);
             })
         } else {
             // only single element
             nameArray.push(element);
         }
     
-        console.log(nameArray);
-    
         for(let i = 0; i < nameArray.length; i++) {
-            let light = nameArray[i];
+            let light = nameArray[i], rgbColor = await getColorOfFriendlyName(light);
     
-            console.log("Getting color");
-            let rgbColor = await getColorOfFriendlyName(light);
-    
-            console.log("Changing color");
             await changeColorOfSlider(light, rgbColor, type);
-    
-            await sleep(1000);
+            
         }
     })
 }
 
+function refreshState(friendlyName, state) {
+    var slider = document.getElementById(`${friendlyName}`);
+
+    if(state == "OFF") {
+        slider.noUiSlider.set([null, 0]);
+    }
+}
+
 function changeColorOfSlider(friendlyName, color, type = "slider") {
     return new Promise((resolve, reject) => {
-        console.group(friendlyName);
+        console.log("Change color of slider", friendlyName);
         let idELe = document.getElementById(`${friendlyName}`);
         let colorEle; 
 
@@ -507,14 +388,10 @@ function changeColorOfSlider(friendlyName, color, type = "slider") {
             colorEle = idELe;
         }
     
-        console.log("light:", friendlyName);
-    
         // change color of slider
             if(color != undefined) {
-                console.log("Color:", color);
                 colorEle.style.background = `${color}`;
                 colorEle.style.boxShadow = `0px 0px 30px ${color})}`
-    
             } 
              else {
                 // light is off or not reachable
@@ -535,34 +412,28 @@ function changeColorOfSlider(friendlyName, color, type = "slider") {
         } else {
             label.style.color = "white"
         }
-
-        console.groupEnd();
-
         resolve();
     })
 }
 
 function getColorOfFriendlyName(friendlyName) {
     return new Promise(async (resolve, reject) => {
-        
+        console.log("get color of friendly name", friendlyName);
         let colorObj = await getIndivData(friendlyName, "color");
         colorObj = colorObj.color;
-        //let brightness = await getIndivData(friendlyName, "brightness");
-
         let rgbColor = await xyBriToRgb(colorObj.x, colorObj.y, 254);
-
-        console.log(rgbColor);
         resolve(rgbColor);
-       
     })
 }
 
 function getIndivData(friendlyName, attribute) {
     return new Promise((resolve, reject) => { 
+        console.log("Get indiv data", friendlyName);
         const url = `${HOST}/getIndivData/${friendlyName}/${attribute}`;
 
-        fetch(url).then(res => res.json()).then((res) => {
-           
+        fetch(url)
+        .then(res => res.json())
+        .then((res) => {
             if(!res.hasOwnProperty(attribute)) {
                 // didn't work, try again
                 getIndivData(friendlyName, attribute);
@@ -570,18 +441,26 @@ function getIndivData(friendlyName, attribute) {
                 resolve(res);
             }
         })
-
     })
 }
 
-async function serviceWorker() {
-    console.log("service worker");
-    //await sleep(7500);
-    //serviceWorker()
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function xyBriToRgb(x, y, bri)
-{
+// needed for stacked onclicks()
+function stopProp() {
+    this.event.stopPropagation();
+}
+
+function makeSwiper() {
+    const swiper = new Swiper('.swiper', {
+        direction: "horizontal",
+        loop: false,
+    });
+}
+
+function xyBriToRgb(x, y, bri) {
     return new Promise((resolve, reject) => {
         z = 1.0 - x - y;
 
@@ -601,11 +480,9 @@ function xyBriToRgb(x, y, bri)
         r = r * 255;   if (r < 0) { r = 255 };
         g = g * 255;   if (g < 0) { g = 255 };
         b = b * 255;   if (b < 0) { b = 255 };
-    
         r = Math.round(r).toString(16);
         g = Math.round(g).toString(16);
         b = Math.round(b).toString(16);
-    
         if (r.length < 2)
             r="0"+r;        
         if (g.length < 2)
@@ -616,7 +493,6 @@ function xyBriToRgb(x, y, bri)
     
         resolve(rgb);
     })
-          
 }
 
 function invertColor(inColor) {
@@ -674,7 +550,6 @@ function lightOrDark(color) {
         return 'dark';
     }
 }
-
 
 // DEBUGGING
 const arrayOfRandomNames = ["Foo", "Bar", "HEllo", "TEst", "Random", "Light", "licht"];

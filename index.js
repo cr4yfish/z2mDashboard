@@ -184,6 +184,7 @@ function sleep(ms) {
 }
 
 const mqttNetwork = {
+    // GET request with parameters
     sendRequest: function(url, body) {
         return new Promise((resolve, reject) => {
             client = mqtt.connect(`mqtt://${_IPADDRESS}`);
@@ -199,6 +200,7 @@ const mqttNetwork = {
             })
         })
     },
+    // just a GET request
     getRequest: function(url, type = "packetreceive") {
         return new Promise((resolve, reject) => {
             client = mqtt.connect(`mqtt://${_IPADDRESS}`);
@@ -256,72 +258,134 @@ const mqttNetwork = {
                 }
             })
         })
-    }
+    },
+    // sends GET request, but with extra parameters as JSON body
+    getRequestWithBody: function(url, body) {
+        return new Promise((resolve, reject) => {
+            console.log("get Request with body");
+            let isSent = false;
+
+            if(!isSent) {
+                isSent = true;
+                client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+                client.on("connect", function() {
+                    try {
+                        console.log("Connected");
+                        client.publish(`${url}/get`, body, function(err) {
+                            console.log("published callback");
+        
+                            client.subscribe(url, async function(err, granted) {
+                                console.log("Subscribed", granted);
+                                await sleep(25);
+        
+                                client.on("packetreceive", async function(topic, buffer, packet) {
+                                    console.log("Message recieved");
+                                    try {
+                                        let message = topic.payload.toString();
+                                        let messageArray = function() {
+                                            message.replace("[", "").replace("]","");
+                                            return JSON.parse(message);
+                                        };
+                                        let jsonMessage = messageArray();
+                
+                                        // callback might be called multiple times with different messages
+                                        console.log("Is target attribute");
+                                        try {
+                                            resolve(jsonMessage);
+                                        } catch (err) {
+                                            console.log("Could not send data", err);
+                                            reject("Could not send data", err);
+                                        }
+                                        
+                                        client.unsubscribe(url);
+                                        client.end();
+                                    } catch (err) {
+                                        reject(err);
+                                    }
+                                })
+                            })
+                        })
+                    } catch (err) {
+                        reject(err);
+                    }
+                })
+            } else {
+                reject("is sent");
+            }
+        })
+    },
 }
+
+let RequestQueue = [], isWorking = false;
 
 app.get("/getIndivData/:friendlyName/:attribute", (req,res) => {
     console.log(`=== GETTING ${req.params.friendlyName} ${req.params.attribute} ===`);
 
-    const reqFriendlyName = req.params.friendlyName;
-    const reqAttribute = req.params.attribute;
-    var body = `{"${reqAttribute}": ""}`;
-    const url = `zigbee2mqtt/${reqFriendlyName}`;
-    let isSent = false;
+    let Request = {
+        reqFriendlyName: req.params.friendlyName,
+        reqAttribute: req.params.attribute,
+        body: ``,
+        url: ``,
+    }
 
-    client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+    Request.body = `{"${Request.reqAttribute}": ""}`;
+    Request.url = `zigbee2mqtt/${Request.reqFriendlyName}`;
 
-    client.on("connect", function() {
-        try {
-            console.log("Connected");
-            client.publish(`${url}/get`, body ,function(err) {
-                console.log("published callback");
+    RequestQueue.push(Request);
 
-                client.subscribe(url, async function(err, granted) {
-                    console.log("Subscribed", granted);
-                    await sleep(25);
-
-                    client.on("packetreceive", async function(topic, buffer, packet) {
-                        if(!isSent) {
-                            console.log("Message recieved");
-                            isSent = true;
-                            try {
-                                let message = topic.payload.toString();
-                                let messageArray = function() {
-                                    message.replace("[", "").replace("]","");
-                                    return JSON.parse(message);
-                                };
-                    
-                                let jsonMessage = messageArray();
-        
-                                // callback might be called multiple times with different messages
-                                if(jsonMessage.hasOwnProperty(reqAttribute)) {
-                                    console.log("Is target attribute");
-                                    try {
-                                        res.send(jsonMessage);
-                                        
-                                    } catch (err) {
-                                        console.log("Could not send data", err);
-                                    }
-                                } else {
-                                    console.log("Not target");
-                                }
-    
-                                client.unsubscribe(url);
-                                client.end();
-                            } catch (err) {
-                                console.log(err);
-                                res.status(500).send();
-                            }
-                        }
-                    })
-                })
-            })
-        }
-        catch (err) {
-            console.log(err);
-        }
-    })
+    // Check if first in queue, if not
+    // wait until
+    let QueueCheck = setInterval(async function () {
+        console.log("Checking Queue, length:", RequestQueue.length);
+        if(checkQueue) {
+            console.log("Next Request inserted");
+            try {
+                let data = await getIndivData(Request);
+                res.send(data);
+            } catch (err) {
+                res.status(500).send();
+            }
+            clearInterval(QueueCheck);
+        } 
+    }, 1000);
 })
+
+function checkQueue() {
+    let returnVal = false;
+    // check if API is working and there is a Queue
+    if(!isWorking && currentRequest.length > 1) {
+        returnVal = true;
+    }
+    return returnVal;
+}
+
+function getIndivData(Request) {
+    return new Promise(async (resolve, reject) => {
+        isWorking = true;
+        RequestQueue.push(Request);
+        console.log("Current Request:", Request);
+        try {
+            let data;
+            data = await mqttNetwork.getRequestWithBody(Request.url, Request.body);
+            if(!data.hasOwnProperty(Request.reqAttribute)) {
+                console.log("not correct attribute");
+                await sleep(3000);
+                data = await mqttNetwork.getRequestWithBody(Request.url, Request.body);
+            }
+            if(!data.hasOwnProperty(Request.reqAttribute)) {
+                reject("attribute");
+                isWorking = false;
+            } else {
+                isWorking = false;
+                resolve(data);
+            }
+        } catch (err) {
+            isWorking = false;
+            reject(err);
+        }
+        let removedEle = RequestQueue.shift();
+    })
+}
 
 let groups = [];
 
