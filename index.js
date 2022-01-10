@@ -12,6 +12,8 @@
     const cors = require("cors");
     const { config } = require("process");
     const { type } = require("os");
+const { send } = require("express/lib/response");
+const { resolve } = require("path");
     app.set("view engine", "ejs");
 
 
@@ -191,8 +193,9 @@ const mqttNetwork = {
             client.on("connect", function() {
                 try {
                     console.log("Connected");
-                    client.publish(url, body, function(err) {
-                        console.log("published callback");
+
+                    console.log("sending", body, "to", url);
+                    client.publish(url, body, {qos: 2} ,function(err) {
                         if(!err) { resolve() } else { reject(err) }
                         client.end();
                     })
@@ -201,22 +204,17 @@ const mqttNetwork = {
         })
     },
     // just a GET request
-    getRequest: function(url, type = "packetreceive") {
+    getRequest: function(url, msgType = "message") {
         return new Promise((resolve, reject) => {
             client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+            let isRecieved = false;
 
             client.on("connect", function() {
                 try {
-                    console.log("Connected, subscribing to:", url);
-                    client.subscribe(url, async function(err, granted) {
-                        console.log("Subscribed", granted);
-                        if(type == "packetreceive") {
-                            await sleep(25);
-                        }
-                        let isRecieved = false;
+                    console.log("getting", url);
 
-                        client.on(type, async function(topic, buffer, packet) {
-                            console.log("recieved", topic);
+                    client.subscribe(url, { qos: 2 }, async function(err, granted) {
+                        client.on('message', async function(topic, buffer, packet) {
                             if(!isRecieved) {
                                 try {
                                     isRecieved = true;
@@ -225,8 +223,9 @@ const mqttNetwork = {
                                         let message;
                                         let jsonMessage;
 
-                                        switch (type) {
+                                        switch (msgType) {
                                                 case "packetreceive":
+                                                    console.log("getting packet");
                                                 message = topic.payload.toString();
                                                 let messageArray = function() {
                                                     message.replace("[", "").replace("]","");
@@ -235,6 +234,7 @@ const mqttNetwork = {
                                                 jsonMessage = messageArray();
                                                 break;
                                             case "message":
+                                                console.log("getting message");
                                                 jsonMessage = JSON.parse(buffer.toString());
                                                 break;
                                         }
@@ -262,7 +262,7 @@ const mqttNetwork = {
     // sends GET request, but with extra parameters as JSON body
     getRequestWithBody: function(url, body) {
         return new Promise((resolve, reject) => {
-            console.log("get Request with body");
+            console.log("get request with body");
             let isSent = false;
 
             if(!isSent) {
@@ -270,16 +270,13 @@ const mqttNetwork = {
                 client = mqtt.connect(`mqtt://${_IPADDRESS}`);
                 client.on("connect", function() {
                     try {
-                        console.log("Connected");
+                        console.log("Sending", body, "to", url);
                         client.publish(`${url}/get`, body, function(err) {
-                            console.log("published callback");
         
                             client.subscribe(url, async function(err, granted) {
-                                console.log("Subscribed", granted);
-                                await sleep(25);
+                                await sleep(50);
         
                                 client.on("packetreceive", async function(topic, buffer, packet) {
-                                    console.log("Message recieved");
                                     try {
                                         let message = topic.payload.toString();
                                         let messageArray = function() {
@@ -289,7 +286,6 @@ const mqttNetwork = {
                                         let jsonMessage = messageArray();
                 
                                         // callback might be called multiple times with different messages
-                                        console.log("Is target attribute");
                                         try {
                                             resolve(jsonMessage);
                                         } catch (err) {
@@ -314,11 +310,22 @@ const mqttNetwork = {
             }
         })
     },
+    experimentalRequest: function(url, body) {
+        return new Promise(async (resolve, reject) => {
+            console.log("Experimental Request");
+            try {
+                await this.sendRequest(url, body);
+                await sleep(1000);
+                let data = await this.getRequest(url);
+                resolve(data);
+            } catch (err) { reject(err); }
+        })
+    }
 }
 
 let RequestQueue = [], isWorking = false;
 
-app.get("/getIndivData/:friendlyName/:attribute", (req,res) => {
+app.get("/getIndivData/:friendlyName/:attribute", async (req,res) => {
     console.log(`=== GETTING ${req.params.friendlyName} ${req.params.attribute} ===`);
 
     let Request = {
@@ -330,60 +337,78 @@ app.get("/getIndivData/:friendlyName/:attribute", (req,res) => {
 
     Request.body = `{"${Request.reqAttribute}": ""}`;
     Request.url = `zigbee2mqtt/${Request.reqFriendlyName}`;
+    try {
+        let data;
+        data = await getIndivData(Request);
 
-    RequestQueue.push(Request);
+        if(!data.hasOwnAttribute(Request.reqAttribute)) {
+            console.log("Resending");
+            data = await getIndivData(Request);
+        }
 
-    // Check if first in queue, if not
-    // wait until
-    let QueueCheck = setInterval(async function () {
-        console.log("Checking Queue, length:", RequestQueue.length);
-        if(checkQueue) {
-            console.log("Next Request inserted");
-            try {
-                let data = await getIndivData(Request);
-                res.send(data);
-            } catch (err) {
-                res.status(500).send();
-            }
-            clearInterval(QueueCheck);
-        } 
-    }, 1000);
+        res.send(data);
+    } catch (err) { res.status(404).send() }
+
 })
 
-function checkQueue() {
-    let returnVal = false;
-    // check if API is working and there is a Queue
-    if(!isWorking && currentRequest.length > 1) {
-        returnVal = true;
+app.post("/getDataForMultipleLights", async (req,res) => {
+    console.log("Getting data for multiple lights");
+    const reqArray = req.body, resArray = [];
+    
+    console.log(reqArray);
+
+    while(reqArray.length != 0) {
+        console.log(resArray);
+        try {
+            let currentReq = reqArray[reqArray.length-1];
+            currentReq.body = currentReq.body.replace(/'/g, '"');
+            console.log(currentReq.body, typeof currentReq.body);
+
+            let data = await getIndivData(currentReq);
+           
+            resArray.push(data);
+            reqArray.pop();
+        } catch (err) { console.log(err); }
+        await sleep(1000);
     }
-    return returnVal;
+
+    res.send(resArray);
+})
+
+function checkQueue(Request) {
+    return new Promise((resolve, reject) => {
+        RequestQueue.push(Request);
+
+        let QueueCheck = setInterval(async function () {
+            if(!isWorking && RequestQueue.length > 0) {
+                console.log("Next Request inserted", RequestQueue[0].reqFriendlyName);
+                try {
+                    let data = await getIndivData(RequestQueue[0]);
+                    resolve(data);
+                } catch (err) { reject(err); }
+            } 
+        }, 1000);
+    })
 }
 
 function getIndivData(Request) {
     return new Promise(async (resolve, reject) => {
+        console.log("Getting indiv data for", Request.reqFriendlyName);
         isWorking = true;
-        RequestQueue.push(Request);
-        console.log("Current Request:", Request);
         try {
-            let data;
-            data = await mqttNetwork.getRequestWithBody(Request.url, Request.body);
-            if(!data.hasOwnProperty(Request.reqAttribute)) {
-                console.log("not correct attribute");
-                await sleep(3000);
-                data = await mqttNetwork.getRequestWithBody(Request.url, Request.body);
-            }
-            if(!data.hasOwnProperty(Request.reqAttribute)) {
-                reject("attribute");
-                isWorking = false;
-            } else {
-                isWorking = false;
-                resolve(data);
-            }
+            let data = await mqttNetwork.experimentalRequest(Request.url, Request.body);
+            data.friendlyName = Request.reqFriendlyName;
+
+            isWorking = false;
+            resolve(data);
+            console.log("Done getting data");
+            let removedEle = RequestQueue.shift();
+
         } catch (err) {
             isWorking = false;
             reject(err);
         }
-        let removedEle = RequestQueue.shift();
+        
     })
 }
 
@@ -601,4 +626,3 @@ app.post("/updateProgram", function(req, res) {
     }
     });
 })
-

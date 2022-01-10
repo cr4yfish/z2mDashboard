@@ -116,7 +116,7 @@ function getGroups() {
             parent.appendChild(makeLightSlider(group, { state: true, color: randomColor, openGroup: true }));
 
             await makeSlider(group);
-            await refreshData(group);
+            //await refreshData(group);
         })
     })
     // make lights
@@ -144,7 +144,7 @@ function getGroups() {
             lights.forEach(async function(light) {
 
                 parent.appendChild(makeLightBox(light));
-                await refreshData(light.friendly_name, "lightBox");
+                //await refreshData(light.friendly_name, "lightBox");
             })
         })
         // finish setup
@@ -169,6 +169,8 @@ function openGroup(friendlyName) {
     // foo data -> true, makes random data
     getGroupData(friendlyName).then(function(group) {
         console.log("Group:", group);
+
+        // lights
         group.members.forEach(async member => {
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
             let friendlyName = "";
@@ -178,21 +180,31 @@ function openGroup(friendlyName) {
                 
                 if(light.ieee_address == member.ieee_address) {
                     // hit
+                    console.log("hit ->", light.friendly_name);
                     friendlyName = light.friendly_name;
                 }
             })
 
             if(friendlyName.length > 0) {
-                devices.appendChild(makeLightSlider(member.friendlyName, {state: true, color: randomColor, openGroup: false}));
-                await makeSlider(member.friendlyName);
-                await refreshData(member.friendlyName);
+                devices.appendChild(makeLightSlider(friendlyName, {state: true, color: randomColor, openGroup: false}));
+                await makeSlider(friendlyName);
+                //await refreshData(member.friendlyName);
             }
         })
 
+        // scenes
         group.scenes.forEach(scene => {
             console.log("SCEENES");
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
-            
+            const scenesArray = JSON.parse(localStorage.getItem("scenes"));
+
+            scenesArray.forEach(localScene => {
+                if(localScene.id == scene.id) {
+                    console.log("scene hit ->", scene, localScene);
+                    scene.name = localScene.sceneName;
+                }
+            })
+
             scenes.appendChild(makeLightBox(
                 {friendly_name: scene.name}, 
                 {
@@ -354,7 +366,7 @@ function refreshData(element = "all", type = "slider") {
             elements.forEach(function(element) {
                 nameArray.push(element.id);
             })
-        } else {
+        } else if(!element.includes("0x")) {
             // only single element
             nameArray.push(element);
         }
@@ -441,6 +453,36 @@ function getIndivData(friendlyName, attribute) {
                 resolve(res);
             }
         })
+    })
+}
+
+function getMultipleData(friendlyNameArray, attribute) {
+    return new Promise((resolve, reject) => {
+        console.log("Getting multiple data for", friendlyNameArray, attribute);
+
+
+        const body = [];
+
+        friendlyNameArray.forEach(friendlyName => {
+            body.push({
+                reqFriendlyName: friendlyName,
+                reqAttribute: attribute,
+                body: `{"${attribute}": ""}`,
+                url: `zigbee2mqtt/${friendlyName}`
+            })
+        })
+        const options = {
+            body: JSON.stringify(body),
+            method: "POST",
+        };
+        
+        const url = `${HOST}/getDataForMultipleLights`;
+
+        fetch(url, options).then(res => res.json()).then(res => {
+            console.log(res);
+            resolve(res);
+        })
+
     })
 }
 

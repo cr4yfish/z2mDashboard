@@ -89,12 +89,13 @@ function getScenes() {
         fetch(url)
         .then(response => response.json())
         .then(function(response) {
-    
+                localStorage.setItem("scenes", JSON.stringify(response));
                 let oldItems = document.querySelectorAll(".sceneBox")
     
                 for(let i = oldItems.length-1; i >= 0; i--) {
                     oldItems[i].remove();
                 }
+
             resolve(response);
         })
     })

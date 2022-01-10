@@ -38,7 +38,7 @@ function makeSliders(set) {
 function makeSlider(friendlyName) {
     return new Promise(async (resolve, reject) => {
         let light = document.getElementById(friendlyName);
-
+        console.log("creating noUi slider", friendlyName);
         noUiSlider.create(light, {
             start: [0, 254],
             step: 1,

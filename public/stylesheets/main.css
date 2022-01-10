@@ -5,10 +5,16 @@ html, body {
     overflow-x: hidden;
 }
 
-h1, h2, a, label, .btn, #groups legend {
+h1, h2, a, label, .btn, #groups legend{
     font-family: "Rubik Mono One", "sans-serif";
     font-weight: 400;
     color: white;
+    font-style: normal;
+}
+
+.lightBoxLabel, .lightBox span {
+    font-family: "Roboto", "sans-serif";
+    font-weight: 400;
     font-style: normal;
 }
 
@@ -353,7 +359,7 @@ a.active {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #ffffff;
+    background-color: #1e1e1e;
     top: 5%;
     z-index: 10;
     border-radius: 3px;
@@ -369,7 +375,7 @@ a.active {
 
 #colorPickerLightName {
     text-align: center;
-    color: black;
+    color: white;
     font-size: 14pt;
     margin-bottom: 1rem;
     word-break: break-all;
@@ -443,6 +449,7 @@ a.active {
     flex-direction: column;
     cursor: pointer;
     background-color: #333333;
+    color: white;
     padding: .5rem;
     width: 5rem;
     height: 5rem;
