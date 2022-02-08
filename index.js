@@ -186,7 +186,7 @@ function sleep(ms) {
 }
 
 const mqttNetwork = {
-    // GET request with parameters
+    // POST request
     sendRequest: function(url, body) {
         return new Promise((resolve, reject) => {
             client = mqtt.connect(`mqtt://${_IPADDRESS}`);
@@ -259,7 +259,7 @@ const mqttNetwork = {
             })
         })
     },
-    // sends GET request, but with extra parameters as JSON body
+    // GET request with body
     getRequestWithBody: function(url, body) {
         return new Promise((resolve, reject) => {
             console.log("get request with body");
@@ -310,6 +310,7 @@ const mqttNetwork = {
             }
         })
     },
+    // POST then GET
     experimentalRequest: function(url, body) {
         return new Promise(async (resolve, reject) => {
             console.log("Experimental Request");
@@ -551,19 +552,18 @@ app.get("/getMirror", function(req,res) {
 
 // saves current setup to scenes db
 app.post("/saveScene/:name/:group/:bri", (req,res) => {
-    console.log("saving scene...")
+    console.log("saving scene...");
     database.saveCurrentToScene(req.params.name, req.params.group, req.params.bri)
-    .then(function(returnDoc) {
-        //console.log(returnDoc);
+    .then(async function(returnDoc) {
+        
+        const url = `zigbee2mqtt/${returnDoc.group}/set`;
+        let doc = `{"scene_store": ${returnDoc.id}}`;
 
-        // send scene doc to mqtt
-        // {"scene_store": SCENE_ID}
-        const url = `zigbee2mqtt/${returnDoc.group}/set`
-        let doc = `{"scene_store": ${returnDoc.id}}`
-        //console.log("Contents: ",url, doc);
-        console.log("Sending response to save scene");
-        client.publish(url, doc, res.status(200).send());
-        console.log("===== DONE ====")
+        console.log("Sending scene", url, doc);
+        await mqttNetwork.sendRequest(url, doc);
+        
+        res.status(200).send({doc: doc})
+        console.log("===== DONE ====");
     })
 })
 

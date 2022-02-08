@@ -349,7 +349,7 @@ a.active {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 2;
+    z-index: 10;
     display: none;
     cursor: pointer;
 }
@@ -361,7 +361,7 @@ a.active {
     transform: translateX(-50%);
     background-color: #1e1e1e;
     top: 5%;
-    z-index: 10;
+    z-index: 11;
     border-radius: 3px;
     padding: 4rem 1rem;
     justify-content: center;
@@ -398,7 +398,7 @@ a.active {
     top: 25%;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 3;
+    z-index: 11;
     display: none;
     justify-content: center;
     align-items: center;
@@ -525,7 +525,7 @@ a.active {
     display: none;
     position: absolute;
     height: fit-content;
-    background-color: black;
+    background-color: #121212;
     flex-direction: column;
     flex-wrap: nowrap;
     z-index: 5;

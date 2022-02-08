@@ -64,7 +64,7 @@ function saveCurrentScene(buttonE) {
         let brightness = response.brightness;
         
         if(brightness == undefined) {
-            brightness = 254;
+            brightness = 253;
         }
 
         // save scene
@@ -77,7 +77,7 @@ function saveCurrentScene(buttonE) {
         fetch(url, options)
         .then(function(response) {
             closeOverlay();
-            getScenes();
+            dashboardScene();
         })
 
     })
@@ -95,7 +95,6 @@ function getScenes() {
                 for(let i = oldItems.length-1; i >= 0; i--) {
                     oldItems[i].remove();
                 }
-
             resolve(response);
         })
     })
@@ -128,6 +127,7 @@ function makeSceneBox(parent, scene) {
 
 }
 
+// makes scenes for group screen
 function groupScene() {
     getScenes().then(function(scenes){
         scenes.forEach(function(scene) {
@@ -137,6 +137,7 @@ function groupScene() {
     }) 
 }
 
+// makes scenes for home screen
 function dashboardScene() {
     getScenes().then(function(scenes) {
         scenes.forEach(function(scene) {

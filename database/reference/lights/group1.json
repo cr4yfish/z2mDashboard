@@ -1,0 +1,14 @@
+{
+    "color": {
+        "hue": 17,
+        "saturation": 98,
+        "x": 0.5752,
+        "y": 0.3891
+    },
+    "color_mode": "xy",
+    "color_temp": 500,
+    
+    "brightness": 254,
+    "linkquality": 255,
+    "state": "ON"
+}

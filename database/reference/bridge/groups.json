@@ -1,0 +1,83 @@
+[
+    {
+        "friendly_name": "Wohnzimmer",
+        "id": 1,
+        "members": [
+            {
+                "endpoint": 11,
+                "ieee_address": "0x00178801102f083e"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x0017880102ace8f0"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x0017880102060ee8"
+            }
+        ],
+        "scenes": [
+            {
+                "id": 34,
+                "name": "Scene 34"
+            },
+            {
+                "id": 170,
+                "name": "Scene 170"
+            }
+        ]
+    },
+    {
+        "friendly_name": "Schlafzimmer",
+        "id": 2,
+        "members": [
+            {
+                "endpoint": 11,
+                "ieee_address": "0x00178801102ef58c"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x0017880103a20a43"
+            }
+        ],
+        "scenes": []
+    },
+    {
+        "friendly_name": "all",
+        "id": 3,
+        "members": [
+            {
+                "endpoint": 11,
+                "ieee_address": "0x00178801102ef58c"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x0017880103a20a43"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x0017880102060ee8"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x0017880102ace8f0"
+            },
+            {
+                "endpoint": 11,
+                "ieee_address": "0x00178801102f083e"
+            }
+        ],
+        "scenes": [
+            {
+                "id": 148,
+                "name": "Scene 148"
+            }
+        ]
+    },
+    {
+        "friendly_name": "default_bind_group",
+        "id": 901,
+        "members": [],
+        "scenes": []
+    }
+]

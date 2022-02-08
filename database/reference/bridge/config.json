@@ -1,0 +1,22 @@
+{
+    "commit": "48b790cb",
+    "coordinator": {
+        "meta": {
+            "maintrel": 0,
+            "majorrel": 38,
+            "minorrel": 114,
+            "product": 0,
+            "revision": "0x26720700",
+            "transportrev": 0
+        },
+        "type": "ConBee2/RaspBee2"
+    },
+    "log_level": "debug",
+    "network": {
+        "channel": 11,
+        "extendedPanID": "0xdddddddddddddddd",
+        "panID": 6754
+    },
+    "permit_join": true,
+    "version": "1.22.1"
+}

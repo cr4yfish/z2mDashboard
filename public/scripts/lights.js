@@ -179,8 +179,6 @@ function openGroup(friendlyName) {
             lightsArray.forEach(light => {
                 
                 if(light.ieee_address == member.ieee_address) {
-                    // hit
-                    console.log("hit ->", light.friendly_name);
                     friendlyName = light.friendly_name;
                 }
             })
@@ -193,8 +191,9 @@ function openGroup(friendlyName) {
         })
 
         // scenes
+        console.log("SCEENES", group.scenes);
         group.scenes.forEach(scene => {
-            console.log("SCEENES");
+            
             const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
             const scenesArray = JSON.parse(localStorage.getItem("scenes"));
 
