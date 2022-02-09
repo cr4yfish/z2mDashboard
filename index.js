@@ -14,9 +14,19 @@
     const { type } = require("os");
 const { send } = require("express/lib/response");
 const { resolve } = require("path");
+const { request } = require("http");
+const { handle } = require("express/lib/application");
     app.set("view engine", "ejs");
 
 
+//
+
+// global vars
+
+    // refresh timer in ms, default 2 seconds
+    const __REQUEST_QUEUE_REFRESH_TIMER = 2000;
+    // timeout time in seconds, default 2 minutes
+    const __REQUEST_QUEUE_TIMEOUT_TIME = 120;
 //
 
 // POST request setup
@@ -316,6 +326,7 @@ const mqttNetwork = {
             console.log("Experimental Request");
             try {
                 await this.sendRequest(url, body);
+                // wait for network to catch up
                 await sleep(1000);
                 let data = await this.getRequest(url);
                 resolve(data);
@@ -324,6 +335,7 @@ const mqttNetwork = {
     }
 }
 
+// RequestQueue holds an array of objects with { request: Object, type: string }
 let RequestQueue = [], isWorking = false;
 
 app.get("/getIndivData/:friendlyName/:attribute", async (req,res) => {
@@ -376,40 +388,132 @@ app.post("/getDataForMultipleLights", async (req,res) => {
     res.send(resArray);
 })
 
-function checkQueue(Request) {
-    return new Promise((resolve, reject) => {
-        RequestQueue.push(Request);
+app.post("/api/test/queue", async (req, res) => {
+    let data;
 
-        let QueueCheck = setInterval(async function () {
-            if(!isWorking && RequestQueue.length > 0) {
-                console.log("Next Request inserted", RequestQueue[0].reqFriendlyName);
-                try {
-                    let data = await getIndivData(RequestQueue[0]);
-                    resolve(data);
-                } catch (err) { reject(err); }
-            } 
+    try {
+        data = await insertNewRequest(req.body.request, req.body.type);
+    } catch(e) {
+        data = { "Error": e.reason, "Request": e.Request, "done": false };
+    }
+
+    res.send(data);
+    
+})
+
+
+function insertNewRequest(Request, reqType) {
+    return new Promise((resolve, reject) => {
+
+        // valid reqType's
+        // -- getIndivData, getData
+        RequestQueue.push({ request: Request, type: reqType });
+
+        let timer = 0;
+        // check every second if request has been handled
+        // rejects if Request could not be handled
+        // timeouts after n time in seconds
+        let reqCheck = setInterval(async () => {
+            timer++;
+            if(RequestQueue[0].hasOwnProperty("done")) {
+                if(RequestQueue[0].done === true) {
+                    console.log("shifting request out");
+                    const handledRequest = RequestQueue.shift();
+                    resolve(handledRequest);
+                } else {
+                    console.log("shifting request out");
+                    const handledRequest = RequestQueue.shift();
+                    reject(handledRequest);
+                }
+
+                clearInterval(reqCheck);
+
+            } else if (timer == __REQUEST_QUEUE_TIMEOUT_TIME) {
+                // timeout
+                console.log("timeout");
+                const unhandledRequest = RequestQueue.shift();
+                reject({ Request: unhandledRequest, reason: "timeout" });
+                clearInterval(reqCheck);
+            }
         }, 1000);
+
     })
 }
 
+let mockRequest = {
+    request: {
+        reqFriendlyName: "testFriendlyName"
+    },
+    type: "testType"
+}
+
+// runs every n seconds, checking if there are Requests waiting
+// n is specified as __REQUEST_QUEUE_REFRESH_TIMER constant
+setInterval(async function () {
+    // only do something if not working and requestQueue holds data
+    console.log("checking queue, current:", RequestQueue[0]);
+    if(!isWorking && RequestQueue.length > 0) {
+        console.log("-- Next Request inserted", RequestQueue[0].request.reqFriendlyName), RequestQueue[0].type;
+        isWorking = true;
+        try {
+            let data;
+            // switches types
+            /* DISABLED FOR DEBUGGING
+            switch(RequestQueue.type) {
+                case "getIndivData":
+                    data = await getIndivData(RequestQueue[0]);
+                    break;
+                case "getData":
+                    data = await getData(RequestQueue[0]);
+                    break;
+            } */
+
+            await sleep(7500);
+
+            console.log(`-- Request done: ${RequestQueue[0].request.reqFriendlyName} of type ${RequestQueue[0].type}`);         
+            RequestQueue[0].done = true;
+            isWorking = false;
+        } catch (err) { 
+            console.log("-- Error at Queue: Failed to handle Request:", 
+            RequestQueue[0],
+            err );
+            
+            if(RequestQueue[0] != undefined) {
+                RequestQueue[0].done = false;
+            } else {
+                RequestQueue[0] = { done: false };
+            }
+            
+            isWorking = false; 
+        }
+    } 
+}, __REQUEST_QUEUE_REFRESH_TIMER);
+
+// gets specific data with SET Request prior to the GET request
 function getIndivData(Request) {
     return new Promise(async (resolve, reject) => {
         console.log("Getting indiv data for", Request.reqFriendlyName);
-        isWorking = true;
         try {
             let data = await mqttNetwork.experimentalRequest(Request.url, Request.body);
             data.friendlyName = Request.reqFriendlyName;
-
-            isWorking = false;
-            resolve(data);
             console.log("Done getting data");
-            let removedEle = RequestQueue.shift();
 
         } catch (err) {
-            isWorking = false;
             reject(err);
         }
-        
+    })
+}
+
+// getData @Params: { Request : Object }
+function getData(Request) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const data = await mqttNetwork.getRequest(Request.url, "message");
+            resolve(data);
+        } 
+        catch (err) {
+            reject(err);
+        }
     })
 }
 
@@ -487,11 +591,13 @@ app.get("/getData/:topic", async (req, res) => {
     let topicsArray = req.params.topic.split("&");
     //console.log(topicsArray);
 
-    const topic = topicsArray.join().replace(",", "/");
-    const url = `zigbee2mqtt/${topic}`;
+    const request = {
+        topic: topicsArray.join().replace(",", "/"),
+        url: `zigbee2mqtt/${topic}`,
+    }
 
     try {
-        const data = await mqttNetwork.getRequest(url, "message");
+        const data = await getData(request);
         res.send(data);
     } 
     catch (err) {
@@ -626,3 +732,5 @@ app.post("/updateProgram", function(req, res) {
     }
     });
 })
+
+console.log("Done with main module");
