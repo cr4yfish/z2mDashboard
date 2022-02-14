@@ -358,9 +358,21 @@ function makeSwiper() {
     function getIndivData(friendlyName, attribute) {
         return new Promise((resolve, reject) => { 
             console.log("Get indiv data", friendlyName);
-            const url = `${HOST}/getIndivData/${friendlyName}/${attribute}`;
+            // OLD const url = `${HOST}/getIndivData/${friendlyName}/${attribute}`;
+            const body = {
+                type: "getIndivData",
+                request: {
+                    friendlyName: friendlyName,
+                    attribute: attribute, 
+                }
+            }
+            const url = `${HOST}/api/v2/queue`;
+            const options = {
+                method: "POST",
+                body: JSON.stringify(body),
+            }
 
-            fetch(url)
+            fetch(url, options)
             .then(res => res.json())
             .then((res) => {
                 if(!res.hasOwnProperty(attribute)) {
@@ -388,17 +400,31 @@ function makeSwiper() {
                     url: `zigbee2mqtt/${friendlyName}`
                 })
             })
-            const options = {
-                body: JSON.stringify(body),
-                method: "POST",
-            };
-            
-            const url = `${HOST}/getDataForMultipleLights`;
 
-            fetch(url, options).then(res => res.json()).then(res => {
-                console.log(res);
-                resolve(res);
+            const url = `${HOST}/api/v2/queue`;
+            let responseArr = [];
+
+            friendlyNameArray.forEach(friendlyName => {
+                const body = {
+                    request: {
+                        url: `zigbee2mqtt/${friendlyName}`,
+                        reqFriendlyName: friendlyName,
+                        reqAttribute: attribute,
+                    },
+                    type: "getData",
+                }
+                const options = {
+                    body: JSON.stringify(body),
+                    method: "POST",
+                };
+
+                fetch(url, options).then(res => res.json()).then(res => {
+                    console.log(res);
+                    responseArr.push(res);
+                })
             })
+
+            resolve(responseArr);
         })
     }
 

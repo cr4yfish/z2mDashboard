@@ -1,3 +1,5 @@
+const { experimentalRequest, getRequest, sendRequest, getRequestWithBody } = require("./mqttNetworkFunctions");
+
 console.log("Loading Queue Module...");
 
 // refresh timer in ms, default 2 seconds
@@ -71,27 +73,29 @@ setInterval(async function () {
      
     if(!isWorking && RequestQueue.length > 0) {
         try {
-            console.log("-- Next Request inserted", RequestQueue[0].request.reqFriendlyName), RequestQueue[0].type;
+            console.log("-- Next Request inserted", RequestQueue[0].request.body), RequestQueue[0].type;
             isWorking = true;
             let data;
 
             // switches types
-            /* DISABLED FOR DEBUGGING
-            switch(RequestQueue.type) {
+            switch(RequestQueue[0].type) {
                 case "getIndivData":
-                    data = await getIndivData(RequestQueue[0]);
+                    data = await getIndivData(RequestQueue[0].request);
                     break;
                 case "getData":
-                    data = await getData(RequestQueue[0]);
+                    data = await getData(RequestQueue[0].request);
                     break;
                 case "sendData":
-                    data = await sendData(RequestQueue[0]);
+                    data = await sendRequest(RequestQueue[0].request.url, RequestQueue[0].request.body);
                     break;
-            } */
+                case "experimentalData":
+                    data = await experimentalRequest(RequestQueue[0].request.url, RequestQueue[0].request.body);
+                    break;
+                default:
+                    throw new Error("Request type not supported!",RequestQueue[0].type);
+                    break;
+            }
 
-
-            // debug
-            await sleep(2500);
 
             console.log(`-- Request done: ${RequestQueue[0].request.reqFriendlyName} of type ${RequestQueue[0].type}`);         
             RequestQueue[0].done = true;
@@ -100,17 +104,26 @@ setInterval(async function () {
             console.log("-- Error at Queue: Failed to handle Request:", 
             RequestQueue[0],
             err );
-            
-            if(RequestQueue[0] != undefined) {
-                RequestQueue[0].done = false;
-            } else {
-                RequestQueue[0] = { done: false };
-            }
+        
+            RequestQueue[0] = { done: false, reason: err.message, request: RequestQueue[0] };
             
             isWorking = false; 
         }
     } 
 }, __REQUEST_QUEUE_REFRESH_TIMER);
+
+// getData Params:  @Request : { url: string, body: Object } 
+function getData(Request) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const data = await getRequest(Request.url, "message");
+            resolve(data);
+        } 
+        catch (err) {
+            reject(err);
+        }
+    })
+}
 
 exports.insertNewRequest = insertNewRequest;
 exports.setQueueTimeout = setQueueTimeout;

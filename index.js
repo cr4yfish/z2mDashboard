@@ -50,10 +50,11 @@ const { handle } = require("express/lib/application");
 //
 
 // init setup
+    const globals = require("./globals");
 
     let groups = []; let themeColor;
     const configfile = path.join(__dirname, "configfile.json");
-    let _IPADDRESS; var loadedConfig; var client;
+    var loadedConfig; var client;
 
     jsonfile.readFile(configfile)
     .then(function(obj) {
@@ -67,7 +68,7 @@ const { handle } = require("express/lib/application");
         // mqtt stuff
             console.log(`connecting to ${obj.ip}:${obj.port}`);
 
-            _IPADDRESS =`${obj.ip}:${obj.port}`; 
+            globals.setIPAddress(`${obj.ip}:${obj.port}`); 
 
             client = mqtt.connect(`mqtt://${obj.ip}:${obj.port}`)
 
@@ -265,7 +266,7 @@ app.get("/settings", (req, res) => {
     app.get("/getGroups", (req, res) => {
         console.log("Getting groups");
 
-        client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+        client = mqtt.connect(`mqtt://${globals.getIPAddress()}`);
 
         client.on("connect", function() {
             if(groups.length > 0) {
@@ -339,7 +340,8 @@ app.get("/settings", (req, res) => {
         }
 
         try {
-            const data = await getData(request);
+            //const data = await getData(request);
+            const data = await Queue.insertNewRequest(request);
             res.send(data);
         } 
         catch (err) {
@@ -372,7 +374,7 @@ app.get("/settings", (req, res) => {
     console.log("Refreshing cached data...");
 
     console.log("Connecting to MQTT broker...");
-    client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+    client = mqtt.connect(`mqtt://${globals.getIPAddress}`);
     
     client.on("connect", function() {
         const topic = "bridge/devices";
@@ -506,28 +508,20 @@ app.get("/settings", (req, res) => {
         return new Promise(async (resolve, reject) => {
             console.log("Getting indiv data for", Request.reqFriendlyName);
             try {
+                Request.body = `{"${Request.atribute}": ""}`;
+                Request.url = `zigbee2mqtt/${Request.friendlyName}`;
+
                 let data = await mqttNetwork.experimentalRequest(Request.url, Request.body);
                 data.friendlyName = Request.reqFriendlyName;
                 console.log("Done getting data");
-
+                resolve(data);
             } catch (err) {
                 reject(err);
             }
         })
     }
 
-    // getData Params:  @Request : { url: string, body: Object } 
-    function getData(Request) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const data = await mqttNetwork.getRequest(Request.url, "message");
-                resolve(data);
-            } 
-            catch (err) {
-                reject(err);
-            }
-        })
-    }
+
 
     // sendData params: @Request { url: String, body: Object }
     function sendData(Request) {

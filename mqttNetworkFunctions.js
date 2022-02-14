@@ -1,4 +1,6 @@
 console.log("loading mqttNetwork functions...");
+const mqtt = require("mqtt")
+const globals = require("./globals");
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -6,7 +8,8 @@ function sleep(ms) {
 
 const sendRequest = function(url, body) {
     return new Promise((resolve, reject) => {
-        client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+        console.log("Sending request", body);
+        client = mqtt.connect(`mqtt://${globals.getIPAddress()}`);
         client.on("connect", function() {
             try {
                 console.log("Connected");
@@ -18,13 +21,17 @@ const sendRequest = function(url, body) {
                 })
             } catch (err) { reject(err)  }
         })
+        client.on("error", function(err) {
+            console.log("mqtt Client error", err);
+            reject(err);
+        })
     })
 }
 
 // just a GET request
 const getRequest = function(url, msgType = "message") {
     return new Promise((resolve, reject) => {
-        client = mqtt.connect(`mqtt://${_IPADDRESS}`);
+        client = mqtt.connect(`mqtt://${globals.getIPAddress()}`);
         let isRecieved = false;
 
         client.on("connect", function() {
@@ -75,6 +82,10 @@ const getRequest = function(url, msgType = "message") {
                 reject(err);
             }
         })
+        client.on("error", function(err) {
+            console.log("mqtt Client error", err);
+            reject(err);
+        })
     })
 }
 
@@ -123,6 +134,10 @@ const getRequestWithBody = function(url, body) {
                 } catch (err) {
                     reject(err);
                 }
+            })
+            client.on("error", function(err) {
+                console.log("mqtt Client error", err);
+                reject(err);
             })
         } else {
             reject("is sent");
