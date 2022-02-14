@@ -1,18 +1,23 @@
+:root {
+    --themeColor: #CA33E2;
+    --themeBG: #C8AFD0; 
+}
+
 html, body {
     background-color: #121212;
-    height: 100%;
+    height: 125%;
     margin: 0;
     overflow-x: hidden;
 }
 
-h1, h2, a, label, .btn, #groups legend{
+h1, h2, a, label, .btn, #groups legend, .banner span {
     font-family: "Rubik Mono One", "sans-serif";
     font-weight: 400;
     color: white;
     font-style: normal;
 }
 
-.lightBoxLabel, .lightBox span {
+.lightBoxLabel, .lightBox span, .bannerContent {
     font-family: "Roboto", "sans-serif";
     font-weight: 400;
     font-style: normal;
@@ -41,8 +46,8 @@ a:hover {
 }
 
 a.active {
-    background-color: #C8AFD0;
-    color: #CA33E2;
+    background-color: var(--themeBG);
+    color: var(--themeColor);
 }
 
 /* ripple effect */
@@ -117,7 +122,7 @@ a.active {
     height: 100%;
     width: 0;
     position: fixed;
-    z-index: 3;
+    z-index: 11;
     top: 0;
     right: 0;
     background-color:#272727;
@@ -134,15 +139,18 @@ a.active {
     justify-content: space-between;
     align-items: center;
     flex-direction: column;
-    height: 50%;
+    height: fit-content;
 }
 
 /* theme color selection */
 .themeColorOption {
     border-radius: 50%;
-    width: 1em;
-    height: 1em;
-    margin-right: .5rem;
+    width: 2em;
+    height: 2em;
+    margin: .5rem;
+    background-color: black;
+    cursor: pointer;
+    transition: box-shadow .25s;
 }
 
 .themeColorOption:last-of-type {
@@ -153,7 +161,7 @@ a.active {
     background-color: "#CA33E2";
 }
 .themeColorOption #blue {
-    background-color: "#5ACAE2";
+    background-color: "#3359e2";
 }
 .themeColorOption #green {
     background-color: "#6BE233";
@@ -166,26 +174,38 @@ a.active {
 
 /* inputs */
 
-.input-wrapper {
+.dbl-input-wrapper {
     display: flex;
-    background-color: white;
+    flex-direction: row;
+    background-color: #202020;
     border-radius: 3px;
     margin-bottom: 2rem;
     height: fit-content;
-    padding: .15rem 2rem .5rem .25rem;
+}
+
+.input-wrapper {
+    display: flex;
+    background-color: #202020;
+    border-radius: 3px;
+    margin-bottom: 2rem;
+    height: fit-content;
+    padding: .5rem 2rem 0.5rem 0.5rem;
     flex-direction: column;
     flex-wrap: nowrap;
+    border: solid 1px #202020;
+    transition: all 0.5s;
 }
 
 .input-wrapper input {
-    background-color: white;
+    background-color: #202020;
+    color: white;
     outline: none;
     font-size: 14pt;
     border: none;
 }
 
 .input-wrapper label {
-    color: black;
+    color: var(--themeColor);
 }
 
 /* buttons */
@@ -211,8 +231,8 @@ a.active {
 }
 
 .btn-primary {
-    color: #CA33E2;
-    background-color: #C8AFD0;
+    color: var(--themeColor);
+    background-color: var(--themeBG);
     --ripple-background: white;
     --ripple-opacity: 0.3;
     --ripple-duration: 600ms;
@@ -221,6 +241,22 @@ a.active {
 .btn-abort {
     color: rgb(133, 55, 55);
     background-color: rgb(207, 109, 109);
+}
+
+.btn-neutral {
+    background-color: var(--themeColor);
+    color: var(--themeBG);
+    border-radius: 0 3px 3px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 5rem;
+    height: 100%;
+    border-bottom: inset var(--themeBG) 5px;
+}
+
+.btn-neutral:hover {
+    border-bottom: 0;
 }
 
 #groups, #scenes, #GroupScreenScenes, #GroupScreenLights {
@@ -242,7 +278,6 @@ a.active {
 }
 
 .light-card .card-body {
-    padding: 0.5rem;
     height: 100%;
     text-align: center;
     display: flex;
@@ -265,9 +300,14 @@ a.active {
     cursor: pointer;
     padding: .5rem;
     border-radius: 53px;
-    color: rgba(0, 0, 0, 0.459);
-    background-color: rgba(255, 255, 255, 0.164);
+    color: rgba(255 255 255 / 46%);
+    background-color: rgba(255 255 255 / 16%);
 
+}
+
+.card-body .fa-power-off {
+    background-color: white;
+    color: black;
 }
 
 .extraStateDiv {
@@ -494,16 +534,34 @@ a.active {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    border-radius: 6px;
+    margin-left: calc(12.5% - 0.5rem);
+    padding: 0.5rem;
+    position: fixed;
+    top: 5%;
+    transition: all 2s;
 }
 
 /* positive banner */
-.banner .banner-positive {
+.banner-positive {
     background-color: #B3DFB2;
     color: black;
 }
 
 .banner span {
     color: inherit;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.banner span i {
+    cursor: pointer;
+}
+
+.bannerContent {
+    word-break: break-word;
 }
 
 .banner .banner-positive .fas {

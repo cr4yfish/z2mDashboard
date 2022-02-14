@@ -8,7 +8,6 @@
     </head>
     <body onload="getGroups();">
 
-
         <div id="sceneSaver">
 
             <div class="input-wrapper">
@@ -23,7 +22,6 @@
 
         <div id="colorOverlay" onclick="closeOverlay();"></div>
 
-
         <div  anim="ripple" class="title">
             <h1>Scenes</h1>
             <%- include("partials/menu.ejs"); %>
@@ -32,11 +30,10 @@
         <div id="groups">
         </div>
 
-
-
-        
         <script src="/scripts/main.js" async defer></script>
         <script src="/scripts/ripple.js" async defer></script>
         <script src="/scripts/scenes.js" async defer></script>
+        <script src="/scripts/setSettings.js" async defer></script>
+        <%- include("partials/setSettings.ejs"); %>
     </body>
 </html>

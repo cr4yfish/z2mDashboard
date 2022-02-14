@@ -62,7 +62,6 @@
             <div id="GroupScreenScenes" class="swiper">
                 <div class="swiper-wrapper"></div>
             </div>
-           
         </div>
 
         <div id="colorOverlay" onclick="closeOverlay();"></div>
@@ -71,7 +70,6 @@
             <h1>Dashboard</h1>
             <%- include("partials/menu.ejs"); %>
         </div>
-
 
         <h1 class="sectionHeader">last used</h1>
         <div id="lastUsed" class="swiper">
@@ -95,6 +93,6 @@
         <script src="/scripts/lights.js" async defer></script>
         <script src="/scripts/ripple.js" async defer></script>
         <script src="/scripts/lightcardComponent.js" async defer></script>
-
+        <%- include("partials/setSettings.ejs"); %>
     </body>
 </html>

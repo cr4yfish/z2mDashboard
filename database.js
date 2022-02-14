@@ -1,5 +1,4 @@
-console.log("Database module loaded")
-console.log("==========")
+console.log("loading Database module")
 
 const Datastore = require("@seald-io/nedb")
 // databases:
@@ -131,3 +130,6 @@ const makeNewDevices = function(devices, groups) {
         })
     })
 }
+
+console.log("Database module loaded")
+console.log("==========")

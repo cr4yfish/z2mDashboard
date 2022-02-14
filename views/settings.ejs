@@ -13,7 +13,8 @@
     </head>
     <body onload="refreshSettings();">
 
-
+        <div id="colorOverlay" onclick="closeOverlay();"></div>
+        
         <div  anim="ripple" class="title">
             <h1>Settings</h1>
             <%- include("partials/menu.ejs"); %>
@@ -31,20 +32,36 @@
                         <label for="portSettingsInput">Port</label>
                         <input type="number" name="" id="portSettingsInput" placeholder="1883">
                     </div>
-    
+
                     <div class="input-wrapper">
-                        <label for="versionSettingsInput">Version</label>
-                        <input type="number" name="" id="versionSettingsInput" placeholder="0.0">
+                        <label for="portSettingsInput">Queue Refresh timer</label>
+                        <input type="number" name="queue_refresh_timer" id="queue_refresh_timer" placeholder="2000">
                     </div>
 
-                    <button onclick="checkUpdates()" anim="ripple" class="btn btn-neutral"></button>
-    
+                    
                     <div class="input-wrapper">
+                        <label for="portSettingsInput">Queue Timeout time</label>
+                        <input type="number" name="queue_timeout_time" id="queue_timeout_time" placeholder="2000">
+                    </div>
+    
+                    <div class="dbl-input-wrapper">
+                        <div style="margin-bottom: 0;" class="input-wrapper">
+                            <label for="versionSettingsInput">Version</label>
+                            <input style="width: 10.5rem;" type="number" name="" id="versionSettingsInput" placeholder="0" readonly>    
+                        </div>
+                        <button onclick="checkUpdates()" anim="ripple" class="btn btn-neutral"><i style="font-size: 2rem;" class="fa fa-redo"></i></button>
+                    </div>
+    
+                    <div class="input-wrapper" style="width: calc(276px - 0.5rem);">
                         <label for="themeColorSettingsInput">Theme color</label>
-                        <div>
-                            <div onclick="selectThemeColor(this);" class="themeColorOption selected" id="pink"></div>
-                            <div onclick="selectThemeColor(this);" class="themeColorOption" id="blue"></div>
-                            <div onclick="selectThemeColor(this);" class="themeColorOption" id="green"></div>
+                        <div style="display: flex; flex-direction: column; height: 3rem;flex-wrap: wrap; width:100%; overflow: auto;">
+                            <div data-active="true" onclick="setActiveColor(this);" class="themeColorOption" data-bg="#59216c" data-primary="#f3a9ff"></div>
+                            <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#26406a" data-primary="#a4b8ff"></div>
+                            <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#795e35" data-primary="#ffe3c0"></div>
+                            <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#266a2b" data-primary="#aaffa4"></div>
+                            <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#6a2626" data-primary="#ffa4a4"></div>
+                            <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#766d1d" data-primary="#ffee5e"></div>
+                            <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#511d76" data-primary="#b740ff"></div>
                         </div>
                     </div>
                 </div>
@@ -57,5 +74,6 @@
         <script src="/scripts/main.js" async defer></script>
         <script src="/scripts/ripple.js" async defer></script>
         <script src="/scripts/settings.js" async defer></script>
+        <%- include("partials/setSettings.ejs"); %>
     </body>
 </html>
