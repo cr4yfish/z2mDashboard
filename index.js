@@ -331,21 +331,23 @@ app.get("/settings", (req, res) => {
     // gets data from bridge
     app.get("/getData/:topic", async (req, res) => {
         console.log("Getting data from topic");
-        let topicsArray = req.params.topic.split("&");
+        let topicsArray = req.params.topic.split("&").join().replaceAll(",", "/");
         //console.log(topicsArray);
 
         const request = {
-            topic: topicsArray.join().replace(",", "/"),
-            url: `zigbee2mqtt/${topic}`,
+            topic: topicsArray,
+            url: `zigbee2mqtt/${topicsArray}`,
+            
+            
         }
 
         try {
             //const data = await getData(request);
-            const data = await Queue.insertNewRequest(request);
+            const data = await Queue.insertNewRequest(request, "getData");
             res.send(data);
         } 
         catch (err) {
-            console.log("Error at getData/", topic, "Err or not granted");
+            console.log("Error at getData/", topicsArray, "Err or not granted");
             console.log(err);
             res.status(500).send();
         }

@@ -128,7 +128,7 @@ function makeSwiper() {
             .then(function(data) {
                 // sort out lights
                 let lights = [];
-                data.forEach(function(item) {
+                data.response.forEach(function(item) {
                     try {
                         if (item.definition.exposes[0].type == "light") {
                             lights.push(item);
@@ -462,7 +462,7 @@ function makeSwiper() {
             .then(function(res) {
                 let Group = { };
     
-                res.forEach(function(group) {
+                res.response.forEach(function(group) {
                     if(group.friendly_name == groupFriendlyName) {
                         Group = {
                             friendlyName: group.friendly_name,

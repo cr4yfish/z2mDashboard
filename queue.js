@@ -73,7 +73,7 @@ setInterval(async function () {
      
     if(!isWorking && RequestQueue.length > 0) {
         try {
-            console.log("-- Next Request inserted", RequestQueue[0].request.body), RequestQueue[0].type;
+            console.log("-- Next Request inserted", RequestQueue[0].request), RequestQueue[0].type;
             isWorking = true;
             let data;
 
@@ -96,8 +96,8 @@ setInterval(async function () {
                     break;
             }
 
-
-            console.log(`-- Request done: ${RequestQueue[0].request.reqFriendlyName} of type ${RequestQueue[0].type}`);         
+            RequestQueue[0].response = data;
+            console.log(`-- Request done: ${RequestQueue[0].request} of type ${RequestQueue[0].type}`);         
             RequestQueue[0].done = true;
             isWorking = false;
         } catch (err) { 
