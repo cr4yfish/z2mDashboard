@@ -11,10 +11,10 @@
     const cors = require("cors");
     const { config } = require("process");
     const { type } = require("os");
-const { send } = require("express/lib/response");
-const { resolve } = require("path");
-const { request } = require("http");
-const { handle } = require("express/lib/application");
+    const { send } = require("express/lib/response");
+    const { resolve } = require("path");
+    const { request } = require("http");
+    const { handle } = require("express/lib/application");
     app.set("view engine", "ejs");
 
 //
@@ -43,9 +43,15 @@ const { handle } = require("express/lib/application");
 
 //
 
+// cache setup
+
+    var cacheTime = 86400000*7;     // 7 days
+
+//
+
 // expose public folder
 
-    app.use(express.static(path.join(__dirname, "/public")));
+    app.use(express.static(path.join(__dirname, "/public"),{ maxAge: cacheTime }));
 
 //
 
@@ -191,9 +197,7 @@ app.get("/settings", (req, res) => {
             // value is a number
             state = `{"${req.params.key}": ${value}}`
         }
-        
         let url = `zigbee2mqtt/${name}/set`
-
         console.log(url, state);
 
         try {
@@ -206,7 +210,6 @@ app.get("/settings", (req, res) => {
 
         res.send();
         console.log("sentResponse");
-
         console.log("====== DONE =====");
         
     })
@@ -241,7 +244,6 @@ app.get("/settings", (req, res) => {
     app.post("/getDataForMultipleLights", async (req,res) => {
         console.log("Getting data for multiple lights");
         const reqArray = req.body, resArray = [];
-        
         console.log(reqArray);
 
         while(reqArray.length != 0) {
@@ -258,7 +260,6 @@ app.get("/settings", (req, res) => {
             } catch (err) { console.log(err); }
             await sleep(1000);
         }
-
         res.send(resArray);
     })
 
@@ -281,7 +282,7 @@ app.get("/settings", (req, res) => {
                 console.log("====== DONE =======");
             }
             else {
-                let url = `zigbee2mqtt/bridge/groups`
+                let url = `zigbee2mqtt/bridge/groups`;
         
                 client.subscribe(url, function(err, granted) {     
                     client.on("message", function(topic, buffer, packet) {
@@ -337,8 +338,6 @@ app.get("/settings", (req, res) => {
         const request = {
             topic: topicsArray,
             url: `zigbee2mqtt/${topicsArray}`,
-            
-            
         }
 
         try {
@@ -351,22 +350,17 @@ app.get("/settings", (req, res) => {
             console.log(err);
             res.status(500).send();
         }
-        
-        
     })
 
     // new API
     app.post("/api/v2/queue", async (req, res) => {
         let data;
-
         try {
             data = await Queue.insertNewRequest(req.body.request, req.body.type);
         } catch(e) {
             data = { "Error": e.reason, "Request": e.Request, "done": false };
         }
-
         res.send(data);
-        
     })
 
 // ==== MIRROR

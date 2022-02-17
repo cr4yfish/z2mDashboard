@@ -93,7 +93,6 @@ setInterval(async function () {
                     break;
                 default:
                     throw new Error("Request type not supported!",RequestQueue[0].type);
-                    break;
             }
 
             RequestQueue[0].response = data;
@@ -106,7 +105,6 @@ setInterval(async function () {
             err );
         
             RequestQueue[0] = { done: false, reason: err.message, request: RequestQueue[0] };
-            
             isWorking = false; 
         }
     } 

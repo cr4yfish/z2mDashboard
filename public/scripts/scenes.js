@@ -1,5 +1,7 @@
-
+// what is this? why is this here
+// why is there another function just likes this in another file?
 function getGroups() {
+    console.log("Getting groups from scenes");
     const url = `${HOST}/getGroups`;
     fetch(url)
     .then(response => response.json())
@@ -54,7 +56,6 @@ function saveCurrentScene(buttonE) {
     let sceneName = document.getElementById("sceneNameInput").value.replace("/","&");
     // replace "/", otherwise API will get it wrong
     let sceneGroup = buttonE.dataset.friendlyname;
-    
 
     // get brightness
     let url = `${HOST}/getData/${sceneGroup}`
@@ -79,30 +80,32 @@ function saveCurrentScene(buttonE) {
             closeOverlay();
             dashboardScene();
         })
-
     })
 }
 
 function getScenes() {
     return new Promise((resolve, reject) => {
-        const url = `${HOST}/getScenes`
-        fetch(url)
-        .then(response => response.json())
-        .then(function(response) {
+        if(localStorage.hasOwnProperty("scenes")) {
+            resolve(JSON.parse(localStorage.getItem("scenes")));
+        } else {
+            const url = `${HOST}/getScenes`
+            fetch(url)
+            .then(response => response.json())
+            .then(function(response) {
                 localStorage.setItem("scenes", JSON.stringify(response));
+                LocalStorageHandler.add("scenes");
                 let oldItems = document.querySelectorAll(".sceneBox")
-    
                 for(let i = oldItems.length-1; i >= 0; i--) {
                     oldItems[i].remove();
                 }
-            resolve(response);
-        })
+                resolve(response);
+            })
+        }
     })
 }
 
 function makeSceneBox(parent, scene) {
         const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
-            
         let box = document.createElement("div");
             box.setAttribute("class", "lightBox sceneBox swiper-slide");
             box.setAttribute("onclick", `setScene("${scene.group}", "${scene.id}")`);
@@ -149,7 +152,6 @@ function dashboardScene() {
 
 function sceneOverlay(e) {
     document.getElementById("sceneFinishBtn").setAttribute("data-friendlyname", e.dataset.friendlyname)
-
     document.getElementById("colorOverlay").style.display = "block"
     document.getElementById("sceneSaver").style.display = "flex";
 } 
@@ -157,10 +159,7 @@ function sceneOverlay(e) {
 function closeSceneOverlay() {
     document.getElementById("colorOverlay").style.display = "none";
     document.getElementById("sceneSaver").style.display = "none";
-
-    // clear input
     document.getElementById("sceneNameInput").value = "";
-
     try {
         document.getElementById("menu").style.width = "0";
         document.getElementById("menuOpener").style.opacity = "1";

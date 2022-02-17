@@ -1,13 +1,7 @@
 #TODO
 
-- Fix Lag
-
 - Find last used lights somehow
-    + make a local copy or -- DONE
+    + make a local copy -- DONE
     + log uses in a database -- NOT STARTED
 
-- Change Frontend to use new Queue system -- STARTED
-
-#DONE
-- Implement the redesign
-    - Implement theme switching 
+- Change Frontend to use new Queue system -- ALMOST COMPLETE

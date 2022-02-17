@@ -66,7 +66,6 @@ const getRequest = function(url, msgType = "message") {
                                 //
 
                                 resolve(jsonMessage);
-
                                 client.unsubscribe(url);
                                 client.end();
                             } catch (err) {

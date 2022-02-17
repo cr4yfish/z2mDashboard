@@ -1,6 +1,24 @@
+const LocalStorageHandler = {
+    array: [],
 
-// refresh time should be 1 second for each group
-let refreshTime = 0;
+    get: function() {
+        return this.array;
+    },
+
+    add: function(newItem) {
+        console.log("localstorageHandler", newItem);
+        if(!this.array.includes(newItem)) {
+            this.array.push(newItem);
+        }
+    },
+
+    clear: function () {
+        this.array.forEach(function (item) {
+            localStorage.removeItem(item);
+        })
+    },
+
+}
 
 function toggleLightState(friendlyName) {
     console.log("toggling light state", friendlyName);
@@ -101,20 +119,32 @@ function makeSwiper() {
 
 // ==== GROUPS
 
-    function getGroups() {
-        console.log("getting groups");
-        const url = `${HOST}/getGroups`;
-        fetch(url)
-        .then(response => response.json())
+    function getGoupsNetwork() {
+        return new Promise((resolve, reject) => {
+            if(localStorage.hasOwnProperty("groups")) {
+                resolve(localStorage.getItem("groups").split(","));
+            } else {
+                const url = `${HOST}/getGroups`;
+                fetch(url)
+                .then(response => response.json())
+                .then(function(groups) {
+                    localStorage.setItem("groups", groups);
+                    LocalStorageHandler.add("groups");
+                    resolve(groups);
+                })
+            }
+        })
+    }
 
-        .then(function(groups) {
+    function getGroups() {
+        console.log("getting groups from lights");
+        getGoupsNetwork()
+        .then(groups => {
             groups.forEach(async function(group) {
-                refreshTime++
                 const parent = document.getElementById("groups"),
-                    randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
+                      randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
 
                 parent.appendChild(makeLightSlider(group, { state: true, color: randomColor, openGroup: true }));
-
                 await makeSlider(group);
                 //await refreshData(group);
             })
@@ -122,38 +152,51 @@ function makeSwiper() {
         // make lights
         .then(function() {
             console.log("Getting devices data")
-            let url = `${HOST}/getData/bridge&devices`
-            fetch(url)
-            .then(data => data.json())
-            .then(function(data) {
-                // sort out lights
-                let lights = [];
-                data.response.forEach(function(item) {
-                    try {
-                        if (item.definition.exposes[0].type == "light") {
-                            lights.push(item);
+            let lights = [];
+            if(localStorage.hasOwnProperty("lights")) {
+                // load lights from cache
+                console.log("using cached data");
+                lights = JSON.parse(localStorage.getItem("lights"));
+                makeLights(lights);
+            } else {
+                console.log("getting new data");
+                let url = `${HOST}/getData/bridge&devices`
+                fetch(url)
+                .then(data => data.json())
+                .then(function(data) {
+                    // sort out lights
+                    data.response.forEach(function(item) {
+                        try {
+                            if (item.definition.exposes[0].type == "light") {
+                                lights.push(item);
+                            }
+                        } catch (e) {
+                            console.log(e);
                         }
-                    } catch (e) {
-                        //console.log(e);
-                    }
+                    })
+                    localStorage.setItem("lights", JSON.stringify(lights));
+                    LocalStorageHandler.add("lights");
+                    console.log("done getting data");
+                    makeLights(lights);
                 })
-                localStorage.setItem("lights", JSON.stringify(lights));
-
-                const parent = document.querySelector("#lastUsed .swiper-wrapper");
-
-                lights.forEach(async function(light) {
-
-                    parent.appendChild(makeLightBox(light));
-                    //await refreshData(light.friendly_name, "lightBox");
-                })
-            })
-            // finish setup
-            .then(function () {
-                makeSwiper();
-                setRipple();
-                dashboardScene()
-            })
+            }
         })
+    }
+
+    function makeLights(lights) {
+        const parent = document.querySelector("#lastUsed .swiper-wrapper");
+        lights.forEach(async function(light) {
+            parent.appendChild(makeLightBox(light));
+            //await refreshData(light.friendly_name, "lightBox");
+        })
+        finishSetup();
+    }
+
+    function finishSetup() {
+        console.log("settings things up");
+        makeSwiper();
+        setRipple();
+        dashboardScene()
     }
 
     function openGroup(friendlyName) {
@@ -170,6 +213,10 @@ function makeSwiper() {
         getGroupData(friendlyName).then(function(group) {
             console.log("Group:", group);
 
+            // save group details in localStorage
+            localStorage.setItem(group.friendlyName, JSON.stringify(group));
+            LocalStorageHandler.add(group.friendlyName);
+
             // lights
             group.members.forEach(async member => {
                 const randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];
@@ -177,7 +224,6 @@ function makeSwiper() {
                 // get friendlyName from ieee address
                 const lightsArray = JSON.parse(localStorage.getItem("lights"));
                 lightsArray.forEach(light => {
-                    
                     if(light.ieee_address == member.ieee_address) {
                         friendlyName = light.friendly_name;
                     }
@@ -239,7 +285,6 @@ function makeSwiper() {
     }
 
 //
-
 
 
 
@@ -456,23 +501,25 @@ function makeSwiper() {
     function getGroupData(groupFriendlyName, fooData = false) {
         return new Promise((resolve, reject) => {
             console.log("Getting group data:", groupFriendlyName);
-            const url = `${HOST}/getData/bridge&groups`;
-            
-            fetch(url).then(res => res.json())
-            .then(function(res) {
-                let Group = { };
-    
-                res.response.forEach(function(group) {
-                    if(group.friendly_name == groupFriendlyName) {
-                        Group = {
-                            friendlyName: group.friendly_name,
-                            scenes: group.scenes,
-                            members: group.members,
+            if(localStorage.hasOwnProperty(groupFriendlyName)) {
+                resolve(JSON.parse(localStorage.getItem(groupFriendlyName)));
+            } else {
+                const url = `${HOST}/getData/bridge&groups`;
+                fetch(url).then(res => res.json())
+                .then(function(res) {
+                    let Group = { };
+                    res.response.forEach(function(group) {
+                        if(group.friendly_name == groupFriendlyName) {
+                            Group = {
+                                friendlyName: group.friendly_name,
+                                scenes: group.scenes,
+                                members: group.members,
+                            }
                         }
-                    }
+                    })
+                    resolve(Group);
                 })
-                resolve(Group);
-            })
+            }
         })
     }
 
@@ -667,7 +714,7 @@ function makeSwiper() {
           g: parseInt(result[2], 16),
           b: parseInt(result[3], 16)
         } : null;
-      }
+    }
     // borrowed from awik.io
     function lightOrDark(color) {
 

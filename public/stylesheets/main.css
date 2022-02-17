@@ -1,3 +1,12 @@
+@font-face {
+    font-family: "Rubik Mono One";
+    src: url("/assets/RubikMonoOne-Regular.ttf");
+}
+@font-face {
+    font-family: "Roboto";
+    src: url("/assets/Roboto-Regular.ttf");
+}
+
 :root {
     --themeColor: #CA33E2;
     --themeBG: #C8AFD0; 
