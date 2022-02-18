@@ -547,14 +547,14 @@ function refreshBrightnessOfFriendlyName(friendlyName) {
             let brightness = await getIndivData(friendlyName, "brightness");
             console.log("got brightness", brightness);
 
-            if(brightness.state == "ON") {
+            if(brightness.state == "OFF") {
+                brightness = 0;
+            } else {
                 if(!brightness.hasOwnProperty("brightness")) {
                     brightness = 255;
                 } else {
                     brightness = parseInt(brightness.brightness);
                 }
-            } else {
-                brightness = 0;
             }
                 
 
