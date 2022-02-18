@@ -354,6 +354,7 @@ app.get("/settings", (req, res) => {
 
     // new API
     app.post("/api/v2/queue", async (req, res) => {
+        console.log(typeof req.body, req.body);
         let data;
         try {
             data = await Queue.insertNewRequest(req.body.request, req.body.type);
@@ -499,23 +500,7 @@ app.get("/settings", (req, res) => {
 
 // ===== REWORKED FUNCTIONS FOR QUEUE SYSTEM
 
-    // getIndivData Params: @Request: { url: String, body: Object }
-    function getIndivData(Request) {
-        return new Promise(async (resolve, reject) => {
-            console.log("Getting indiv data for", Request.reqFriendlyName);
-            try {
-                Request.body = `{"${Request.atribute}": ""}`;
-                Request.url = `zigbee2mqtt/${Request.friendlyName}`;
-
-                let data = await mqttNetwork.experimentalRequest(Request.url, Request.body);
-                data.friendlyName = Request.reqFriendlyName;
-                console.log("Done getting data");
-                resolve(data);
-            } catch (err) {
-                reject(err);
-            }
-        })
-    }
+    
 
 
 

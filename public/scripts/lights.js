@@ -28,7 +28,9 @@ function toggleLightState(friendlyName) {
         options = { method: "POST", headers: { "Content-Type": "application/json" } }
 
     fetch(url, options)
-    .then(function (response) {} )
+    .then(function (response) {
+        refreshBrightnessOfFriendlyName(friendlyName);
+    } )
 }
 
 function toggleLightStateNew(friendlyName) {
@@ -196,7 +198,8 @@ function makeSwiper() {
         console.log("settings things up");
         makeSwiper();
         setRipple();
-        dashboardScene()
+        dashboardScene();
+        refreshData();
     }
 
     function openGroup(friendlyName) {
@@ -403,29 +406,32 @@ function makeSwiper() {
     function getIndivData(friendlyName, attribute) {
         return new Promise((resolve, reject) => { 
             console.log("Get indiv data", friendlyName);
-            // OLD const url = `${HOST}/getIndivData/${friendlyName}/${attribute}`;
+
             const body = {
-                type: "getIndivData",
-                request: {
-                    friendlyName: friendlyName,
-                    attribute: attribute, 
+                "type": "getIndivData",
+                "request": {
+                    "friendlyName": friendlyName,
+                    "attribute": attribute, 
                 }
             }
+
             const url = `${HOST}/api/v2/queue`;
             const options = {
                 method: "POST",
                 body: JSON.stringify(body),
+                headers: {
+                    "Content-Type": "application/json"
+                }
             }
 
             fetch(url, options)
             .then(res => res.json())
             .then((res) => {
-                if(!res.hasOwnProperty(attribute)) {
-                    // didn't work, try again
-                    getIndivData(friendlyName, attribute);
+                if(res.done == true) {
+                    resolve(res.response);
                 } else {
-                    resolve(res);
-                }
+                    reject(res.Error);
+                }    
             })
         })
     }
@@ -490,10 +496,16 @@ function makeSwiper() {
             }
         
             for(let i = 0; i < nameArray.length; i++) {
-                let light = nameArray[i], rgbColor = await getColorOfFriendlyName(light);
-        
-                await changeColorOfSlider(light, rgbColor, type);
-                
+                try {
+                    let light = nameArray[i], rgbColor = await getColorOfFriendlyName(light);
+                    
+                    await changeColorOfSlider(light, rgbColor, type);
+                    await refreshBrightnessOfFriendlyName(light);
+                    
+                } catch (e) {
+                    console.log(e);
+                }
+          
             }
         })
     }
@@ -526,7 +538,38 @@ function makeSwiper() {
 //
 
 
+// returns brightness : int   of friendlyName : string
+function refreshBrightnessOfFriendlyName(friendlyName) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // get brightness
+            console.log("get brightness of friendly name", friendlyName);
+            let brightness = await getIndivData(friendlyName, "brightness");
+            console.log("got brightness", brightness);
 
+            if(brightness.state == "ON") {
+                if(!brightness.hasOwnProperty("brightness")) {
+                    brightness = 255;
+                } else {
+                    brightness = parseInt(brightness.brightness);
+                }
+            } else {
+                brightness = 0;
+            }
+                
+
+            // change brightness
+            
+            var slider = document.getElementById(`${friendlyName}`);
+            slider.noUiSlider.set([null, brightness]);
+
+            resolve();
+        } catch (e) {
+            console.log("Error!", e);
+            reject(e);
+        }
+    })
+}
 
 // ========= COLOR
 
@@ -653,11 +696,17 @@ function makeSwiper() {
 
     function getColorOfFriendlyName(friendlyName) {
         return new Promise(async (resolve, reject) => {
-            console.log("get color of friendly name", friendlyName);
-            let colorObj = await getIndivData(friendlyName, "color");
-            colorObj = colorObj.color;
-            let rgbColor = await xyBriToRgb(colorObj.x, colorObj.y, 254);
-            resolve(rgbColor);
+            try {
+                console.log("get color of friendly name", friendlyName);
+                let colorObj = await getIndivData(friendlyName, "color");
+                colorObj = colorObj.color;
+                let rgbColor = await xyBriToRgb(colorObj.x, colorObj.y, 254);
+                resolve(rgbColor);
+            } catch (e) {
+                console.log("Error!", e);
+                reject(e);
+            }
+            
         })
     }
 

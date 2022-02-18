@@ -13,9 +13,8 @@ const sendRequest = function(url, body) {
         client.on("connect", function() {
             try {
                 console.log("Connected");
-
                 console.log("sending", body, "to", url);
-                client.publish(url, body, {qos: 2} ,function(err) {
+                client.publish(url, body, function(err) {
                     if(!err) { resolve() } else { reject(err) }
                     client.end();
                 })
@@ -149,10 +148,10 @@ const experimentalRequest =  function(url, body) {
     return new Promise(async (resolve, reject) => {
         console.log("Experimental Request");
         try {
-            await this.sendRequest(url, body);
+            await sendRequest(url + "/get", body);
             // wait for network to catch up
-            await sleep(1000);
-            let data = await this.getRequest(url);
+            await sleep(2000);
+            let data = await getRequest(url);
             resolve(data);
         } catch (err) { reject(err); }
     })

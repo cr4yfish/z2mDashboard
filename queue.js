@@ -44,7 +44,7 @@ const insertNewRequest = function(Request, reqType) {
                     const handledRequest = RequestQueue.shift();
                     resolve(handledRequest);
                 } else {
-                    console.log("shifting request out");
+                    console.log("Error, shifting request out");
                     const handledRequest = RequestQueue.shift();
                     reject(handledRequest);
                 }
@@ -103,7 +103,7 @@ setInterval(async function () {
             console.log("-- Error at Queue: Failed to handle Request:", 
             RequestQueue[0],
             err );
-        
+            
             RequestQueue[0] = { done: false, reason: err.message, request: RequestQueue[0] };
             isWorking = false; 
         }
@@ -118,6 +118,23 @@ function getData(Request) {
             resolve(data);
         } 
         catch (err) {
+            reject(err);
+        }
+    })
+}
+
+// getIndivData Params: @Request: { url: String, body: Object }
+function getIndivData(Request) {
+    return new Promise(async (resolve, reject) => {
+        console.log("Getting indiv data for", Request.friendlyName);
+        try {
+            Request.body = `{"${Request.attribute}": ""}`;
+            Request.url = `zigbee2mqtt/${Request.friendlyName}`;
+            let data = await experimentalRequest(Request.url, Request.body);
+            data.friendlyName = Request.friendlyName;
+            console.log("Done getting data");
+            resolve(data);
+        } catch (err) {
             reject(err);
         }
     })
