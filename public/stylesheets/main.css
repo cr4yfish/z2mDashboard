@@ -12,11 +12,29 @@
     --themeBG: #C8AFD0; 
 }
 
+/* width */
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #646464;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: var(--themeColor);
+    border-radius: 5px;
+}
+
+
 html, body {
     background-color: #121212;
     height: 125%;
     margin: 0;
     overflow-x: hidden;
+    background: linear-gradient(204deg, #110D1A 0%, rgba(18,18,18,1) 75%);
 }
 
 h1, h2, a, label, .btn, #groups legend, .banner span {
