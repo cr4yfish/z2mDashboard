@@ -34,7 +34,7 @@ html, body {
     height: 125%;
     margin: 0;
     overflow-x: hidden;
-    background: linear-gradient(204deg, #110D1A 0%, rgba(18,18,18,1) 75%);
+    background: linear-gradient(228deg, var(--themeBG) -858%, rgba(18,18,18,1) 77%);
 }
 
 h1, h2, a, label, .btn, #groups legend, .banner span {
