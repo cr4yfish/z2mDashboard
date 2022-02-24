@@ -12,8 +12,7 @@ z2m Dashboard uses these technologies:
 
 - [NodeJS]
 - [ExpressJS]
-- [Mqtt.js]
-- [Vue.js]
+- [Mqtt.js
 - [NoUiSlider.js]
 - [Font Awesome]
 - [nedb]
@@ -113,7 +112,6 @@ const HOST = 'http://localhost:30000'
 [NodeJS]: <https://nodejs.org/>
 [ExpressJS]: <https://expressjs.com/>
 [Mqtt.js]: <https://github.com/mqttjs/MQTT.js>
-[Vue.js]: <https://vuejs.org/>
 [NoUiSlider.js]: <https://refreshless.com/nouislider/>
 [Font Awesome]: <https://fontawesome.com/>
 [nedb]: <https://github.com/seald/nedb>
