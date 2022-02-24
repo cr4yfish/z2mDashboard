@@ -12,7 +12,7 @@ z2m Dashboard uses these technologies:
 
 - [NodeJS]
 - [ExpressJS]
-- [Mqtt.js
+- [Mqtt.js]
 - [NoUiSlider.js]
 - [Font Awesome]
 - [nedb]
