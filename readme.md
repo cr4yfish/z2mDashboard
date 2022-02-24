@@ -69,7 +69,7 @@ pm2 save
 Steps:
 - Open the frontend
 ```web
-http://[the same IP you typed in earlier]:3000
+http://[the same IP you typed in earlier]:30000
 ```
 - Go to the settings tab by tapping the menu icon in the top right.
 - Change IP and PORT to your zigbee2Mqtt installation.
