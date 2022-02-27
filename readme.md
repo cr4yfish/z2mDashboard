@@ -13,7 +13,6 @@ z2m Dashboard uses these technologies:
 - [NodeJS]
 - [ExpressJS]
 - [Mqtt.js]
-- [Vue.js]
 - [NoUiSlider.js]
 - [Font Awesome]
 - [nedb]
@@ -70,7 +69,7 @@ pm2 save
 Steps:
 - Open the frontend
 ```web
-http://[the same IP you typed in earlier]:3000
+http://[the same IP you typed in earlier]:30000
 ```
 - Go to the settings tab by tapping the menu icon in the top right.
 - Change IP and PORT to your zigbee2Mqtt installation.
@@ -113,7 +112,6 @@ const HOST = 'http://localhost:30000'
 [NodeJS]: <https://nodejs.org/>
 [ExpressJS]: <https://expressjs.com/>
 [Mqtt.js]: <https://github.com/mqttjs/MQTT.js>
-[Vue.js]: <https://vuejs.org/>
 [NoUiSlider.js]: <https://refreshless.com/nouislider/>
 [Font Awesome]: <https://fontawesome.com/>
 [nedb]: <https://github.com/seald/nedb>
