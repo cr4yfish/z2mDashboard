@@ -173,9 +173,12 @@ app.get("/settings", (req, res) => {
 
     app.post("/set/:name/:key/:value", async (req, res) => {
         console.log(`== STATE CHANGE ${req.params.name} ${req.params.key} ${req.params.value} == `)
-        let name = req.params.name;
-        let state;
-        let value;
+        let name = req.params.name, 
+            state, 
+            value,
+            parsedValue,
+            url,
+            data;
 
         if(req.params.key == "color") {
             // add "#"
@@ -184,34 +187,32 @@ app.get("/settings", (req, res) => {
             value = req.params.value
         }
 
-        let parsedValue = parseInt(value);
+        parsedValue = parseInt(value);
 
         // find out if the key is a number
         if(parsedValue.toString() == "NaN") 
         {
-        // value is a string
-        state = `{"${req.params.key}": "${value}"}`
+            // value is a string
+            state = `{"${req.params.key}": "${value}"}`
         } 
         else 
         {
             // value is a number
             state = `{"${req.params.key}": ${value}}`
         }
-        let url = `zigbee2mqtt/${name}/set`
+        url = `zigbee2mqtt/${name}/set`
         console.log(url, state);
 
+        const request = { url: url, body: state };
         try {
-            await mqttNetwork.sendRequest(url, state);
-            res.status(200);
-        } catch (err) {
-            console.log(err);
-            res.status(500);
+            data = await Queue.insertNewRequest(request, "sendData");
+        } catch(e) {
+            data = { "Error": e.reason, "Request": e.Request, "done": false };
         }
 
-        res.send();
+        res.send(data);
         console.log("sentResponse");
         console.log("====== DONE =====");
-        
     })
 
     app.get("/getIndivData/:friendlyName/:attribute", async (req,res) => {
@@ -234,10 +235,8 @@ app.get("/settings", (req, res) => {
                 console.log("Resending");
                 data = await getIndivData(Request);
             }
-
             res.send(data);
         } catch (err) { res.status(404).send() }
-
     })
 
     // will be deprecated when Queue system rolls out
@@ -268,7 +267,6 @@ app.get("/settings", (req, res) => {
         console.log("Getting groups");
 
         client = mqtt.connect(`mqtt://${globals.getIPAddress()}`);
-
         client.on("connect", function() {
             if(groups.length > 0) {
                 console.log("using cache");

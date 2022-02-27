@@ -22,71 +22,77 @@ const LocalStorageHandler = {
 
 function toggleLightState(friendlyName) {
     console.log("toggling light state", friendlyName);
+    // get current state
+    const lightState = window.getComputedStyle(document.getElementById(friendlyName).querySelector(".lightSlider")), 
+            light = document.getElementById(friendlyName);
+    console.log(lightState);
+    let newState, newColor = lightState.backgroundColor, alpha;
+
+    // check if theres a dataset
+    if(!light.dataset.hasOwnProperty("ison")) {
+        light.dataset.ison = "default";
+    }
+
+    switch(light.dataset.ison) {
+        case "true":
+            newState = false;
+            alpha = 0.5;
+            light.dataset.ison = false;
+            break;
+        case "false":
+            newState = true;
+            alpha = 1;
+            light.dataset.ison = true;
+            break;
+        default:
+            newState = false;
+            alpha = 0.5;
+            light.dataset.ison = false;
+            break;
+    }
+
+    try {
+        console.log(newColor);
+        // convert to rgb, if necessary
+        if(!newColor.includes("rgb")) {
+            newColor = hexToRgb(newColor);
+            newColor = `${newColor.r} ${newColor.b} ${newColor.b} ${alpha}`;
+        } else {
+            let lastIndex = newColor.indexOf(")"), startIndex = newColor.indexOf("(");
+            newColor = `rgba${newColor.substring(startIndex, lastIndex - 1)}, ${alpha})`;
+        }
+    
+        lightState.style.backgroundColor = newColor;
+        console.log(newColor);
+    } catch (e) {console.log(e);}
 
     const url = `${HOST}/set/${friendlyName}/state/toggle`,
 
         options = { method: "POST", headers: { "Content-Type": "application/json" } }
 
-    fetch(url, options)
-    .then(function (response) {
+    fetch(url, options).then(res => res.json())
+    .then(function (res) {
         refreshBrightnessOfFriendlyName(friendlyName);
-    } )
-}
 
-function toggleLightStateNew(friendlyName) {
-    // get current state
-    const lightState = document.getElementById(friendlyName);
-    let newState, newColor = lightState.style.backgroundColor, alpha;
-
-    switch(lightState.dataset.ison) {
-        case "true":
-            newState = false;
-            alpha = 0.5;
-            lightState.dataset.ison = false;
-            break;
-        case "false":
-            newState = true;
-            alpha = 1;
-            lightState.dataset.ison = true;
-            break;
-        default:
-            newState = true;
-            alpha = 1;
-            lightState.dataset.ison = true;
-            break;
-    }
-
-    // convert to rgb, if necessary
-    if(!newColor.includes("rgb")) {
-        newColor = hexToRgb(oldColor);
-        newColor = `${newColor.r} ${newColor.b} ${newColor.b} ${alpha}`;
-    } else {
-        let lastIndex = newColor.indexOf(")"), startIndex = newColor.indexOf("(");
-        newColor = `rgba${newColor.substring(startIndex, lastIndex - 1)}, ${alpha})`;
-    }
-
-    lightState.style.backgroundColor = newColor;
-    console.log(newColor);
-
-    
-    // send request to server
-    const url = `${HOST}/api/v2/queue`;
-    const options = {
-        "method": "POST",
-    }
-    fetch(url, options).then(res => res.json()).then(res => {
-        console.log(res);
+        console.log("Is done?", res);
 
         // update DOM state
         if(res.done == true) {
             // light has been successfully switched
             // change DOM props
             
+            const icon = document.getElementById(friendlyName).querySelector(`.fa-power-off`);
             
-            
+                if(newState) {
+                    icon.style.backgroundColor = "white";
+                    icon.style.color = "black";
+                } else {
+                    icon.style.backgroundColor = "#ffffff29";
+                    icon.style.color = "#ffffff75";
+                }
 
         }
-    })
+    } )
 }
 
 function refreshState(friendlyName, state) {
@@ -440,7 +446,6 @@ function makeSwiper() {
         return new Promise((resolve, reject) => {
             console.log("Getting multiple data for", friendlyNameArray, attribute);
 
-
             const body = [];
 
             friendlyNameArray.forEach(friendlyName => {
@@ -547,8 +552,11 @@ function refreshBrightnessOfFriendlyName(friendlyName) {
             let brightness = await getIndivData(friendlyName, "brightness");
             console.log("got brightness", brightness);
 
-            if(brightness.state == "OFF") {
-                brightness = 0;
+
+            if(brightness.hasOwnProperty("state")) {
+                if(brightness.state == "OFF") {
+                    brightness = 0;
+                }
             } else {
                 if(!brightness.hasOwnProperty("brightness")) {
                     brightness = 255;
@@ -556,10 +564,8 @@ function refreshBrightnessOfFriendlyName(friendlyName) {
                     brightness = parseInt(brightness.brightness);
                 }
             }
-                
-
-            // change brightness
             
+            // change brightness
             var slider = document.getElementById(`${friendlyName}`);
             slider.noUiSlider.set([null, brightness]);
 

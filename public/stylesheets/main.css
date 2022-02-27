@@ -172,8 +172,8 @@ a.active {
 /* theme color selection */
 .themeColorOption {
     border-radius: 50%;
-    width: 2em;
-    height: 2em;
+    width: 30px;
+    height: 30px;
     margin: .5rem;
     background-color: black;
     cursor: pointer;
