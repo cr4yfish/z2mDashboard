@@ -28,8 +28,6 @@ function sleep(ms) {
 const insertNewRequest = function(Request, reqType) {
     return new Promise((resolve, reject) => {
 
-        // valid reqType's
-        // -- getIndivData, getData
         RequestQueue.push({ request: Request, type: reqType });
 
         let timer = 0;
@@ -40,7 +38,7 @@ const insertNewRequest = function(Request, reqType) {
             timer++;
             if(RequestQueue[0].hasOwnProperty("done")) {
                 if(RequestQueue[0].done === true) {
-                    console.log("shifting request out");
+                    console.log("Done, shifting request out");
                     const handledRequest = RequestQueue.shift();
                     resolve(handledRequest);
                 } else {

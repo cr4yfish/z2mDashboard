@@ -44,8 +44,7 @@ const getRequest = function(url, msgType = "message") {
                                 isRecieved = true;
 
                                 // make message
-                                    let message;
-                                    let jsonMessage;
+                                    let message, jsonMessage;
 
                                     switch (msgType) {
                                             case "packetreceive":
