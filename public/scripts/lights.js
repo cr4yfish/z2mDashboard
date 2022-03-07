@@ -549,7 +549,8 @@ function refreshBrightnessOfFriendlyName(friendlyName) {
         try {
             // get brightness
             console.log("get brightness of friendly name", friendlyName);
-            let brightness = await getIndivData(friendlyName, "brightness");
+            //let brightness = await getIndivData(friendlyName, "brightness");
+            let brightness = { brightness: 255 }; 
             console.log("got brightness", brightness);
 
 
