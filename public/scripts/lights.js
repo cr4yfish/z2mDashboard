@@ -704,7 +704,8 @@ function refreshBrightnessOfFriendlyName(friendlyName) {
         return new Promise(async (resolve, reject) => {
             try {
                 console.log("get color of friendly name", friendlyName);
-                let colorObj = await getIndivData(friendlyName, "color");
+                let colorObj;
+                //colorObj = await getIndivData(friendlyName, "color");
                 colorObj = colorObj.color;
                 let rgbColor = await xyBriToRgb(colorObj.x, colorObj.y, 254);
                 resolve(rgbColor);

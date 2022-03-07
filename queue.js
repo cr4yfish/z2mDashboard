@@ -20,10 +20,6 @@ const setQueueTimeout = function(newVal) {
 // RequestQueue holds an array of objects with { request: Object, type: string }
 let RequestQueue = [], isWorking = false;
 
-// Only needed for debugging
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 const insertNewRequest = function(Request, reqType) {
     return new Promise((resolve, reject) => {
@@ -71,22 +67,26 @@ setInterval(async function () {
      
     if(!isWorking && RequestQueue.length > 0) {
         try {
-            console.log("-- Next Request inserted", RequestQueue[0].request), RequestQueue[0].type;
+            console.log("-- Next Request inserted", RequestQueue[0].request, RequestQueue[0].type);
             isWorking = true;
             let data;
 
             // switches types
             switch(RequestQueue[0].type) {
                 case "getIndivData":
+                    console.log("Getting indiv data");
                     data = await getIndivData(RequestQueue[0].request);
                     break;
                 case "getData":
-                    data = await getData(RequestQueue[0].request);
+                    console.log("Getting data");
+                    data = await getRequest(RequestQueue[0].request.url);
                     break;
                 case "sendData":
+                    console.log("Sending data");
                     data = await sendRequest(RequestQueue[0].request.url, RequestQueue[0].request.body);
                     break;
                 case "experimentalData":
+                    console.log("Experimental data");
                     data = await experimentalRequest(RequestQueue[0].request.url, RequestQueue[0].request.body);
                     break;
                 default:
@@ -101,25 +101,12 @@ setInterval(async function () {
             console.log("-- Error at Queue: Failed to handle Request:", 
             RequestQueue[0],
             err );
-            
             RequestQueue[0] = { done: false, reason: err.message, request: RequestQueue[0] };
             isWorking = false; 
         }
     } 
 }, __REQUEST_QUEUE_REFRESH_TIMER);
 
-// getData Params:  @Request : { url: string, body: Object } 
-function getData(Request) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const data = await getRequest(Request.url, "message");
-            resolve(data);
-        } 
-        catch (err) {
-            reject(err);
-        }
-    })
-}
 
 // getIndivData Params: @Request: { url: String, body: Object }
 function getIndivData(Request) {
@@ -132,9 +119,7 @@ function getIndivData(Request) {
             data.friendlyName = Request.friendlyName;
             console.log("Done getting data");
             resolve(data);
-        } catch (err) {
-            reject(err);
-        }
+        } catch (err) { reject(err); }
     })
 }
 

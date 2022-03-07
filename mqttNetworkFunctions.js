@@ -27,59 +27,54 @@ const sendRequest = function(url, body) {
     })
 }
 
-// just a GET request
+// a GET request
 const getRequest = function(url, msgType = "message") {
     return new Promise((resolve, reject) => {
         client = mqtt.connect(`mqtt://${globals.getIPAddress()}`);
-        let isRecieved = false;
 
         client.on("connect", function() {
             try {
                 console.log("getting", url);
-
-                client.subscribe(url, { qos: 2 }, async function(err, granted) {
+                client.subscribe(url, async function(err, granted) {
                     client.on('message', async function(topic, buffer, packet) {
-                        if(!isRecieved) {
-                            try {
-                                isRecieved = true;
+                            isRecieved = true;
 
-                                // make message
-                                    let message, jsonMessage;
-
-                                    switch (msgType) {
-                                            case "packetreceive":
-                                                console.log("getting packet");
-                                            message = topic.payload.toString();
-                                            let messageArray = function() {
-                                                message.replace("[", "").replace("]","");
-                                                return JSON.parse(message);
-                                            };
-                                            jsonMessage = messageArray();
-                                            break;
-                                        case "message":
-                                            console.log("getting message");
-                                            jsonMessage = JSON.parse(buffer.toString());
-                                            break;
-                                    }
-                                //
-
-                                resolve(jsonMessage);
-                                client.unsubscribe(url);
-                                client.end();
-                            } catch (err) {
-                                console.log(err);
-                                reject(err);
+                        // make message
+                            let message, jsonMessage;
+                            switch (msgType) {
+                                case "packetreceive":
+                                    console.log("getting packet");
+                                    message = topic.payload.toString();
+                                    let messageArray = function() {
+                                        message.replace("[", "").replace("]","");
+                                        return JSON.parse(message);
+                                    };
+                                    jsonMessage = messageArray();
+                                    break;
+                                case "message":
+                                    console.log("getting message");
+                                    jsonMessage = JSON.parse(buffer.toString());
+                                    break;
                             }
-                        }
+                        //
+
+                        resolve(jsonMessage);
+                        client.unsubscribe(url);
+                        client.end();
+                        
                     })
                 })
             }
             catch (err) {
+                client.unsubscribe(url);
+                client.end();
                 console.log(err);
                 reject(err);
             }
         })
         client.on("error", function(err) {
+            client.unsubscribe(url);
+            client.end();
             console.log("mqtt Client error", err);
             reject(err);
         })
