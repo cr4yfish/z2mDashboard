@@ -29,6 +29,35 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+const LocalStorageHandler = {
+    array: [],
+
+    get: function() {
+        return this.array;
+    },
+
+    add: function(newItem) {
+        console.log("localstorageHandler", newItem);
+        if(!this.array.includes(newItem)) {
+            this.array.push(newItem);
+        }
+    },
+
+    clear: function () {
+        console.log("Clearing", this.get());
+        this.array.forEach(function (item) {
+            localStorage.removeItem(item);
+        })
+    },
+
+    refresh: function() {
+        console.log("Refreshing list");
+        Object.keys(localStorage).forEach(key => {
+            this.add(key);
+        })
+    }
+}
+
 function openMenu() {
     document.getElementById("menu").style.width = "250px";
     document.getElementById("menuOpener").style.opacity = "0";
@@ -50,7 +79,7 @@ function closeMenu() {
     }
 }
 
-async function makeNotice(header, str, state) {
+async function makeNotice(header = "Notice", str = "", state = "positive") {
     let bgColor = "#B3DFB2";
     let iconColor = "#3B533B";
     let bannerClass = "positive";
@@ -63,7 +92,8 @@ async function makeNotice(header, str, state) {
             bannerClass = "negative";
             break;
         case "info": 
-
+            break;
+        case "warn":
             break;
     }
 

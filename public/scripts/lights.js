@@ -1,25 +1,3 @@
-const LocalStorageHandler = {
-    array: [],
-
-    get: function() {
-        return this.array;
-    },
-
-    add: function(newItem) {
-        console.log("localstorageHandler", newItem);
-        if(!this.array.includes(newItem)) {
-            this.array.push(newItem);
-        }
-    },
-
-    clear: function () {
-        this.array.forEach(function (item) {
-            localStorage.removeItem(item);
-        })
-    },
-
-}
-
 function toggleLightState(friendlyName) {
     console.log("toggling light state", friendlyName);
     // get current state

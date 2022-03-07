@@ -64,6 +64,11 @@
                             <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#511d76" data-primary="#b740ff"></div>
                         </div>
                     </div>
+
+                    <div class="input-wrapper" style="flex-direction: row; justify-content: space-evenly; align-items: center;">
+                        <button onclick="LocalStorageHandler.refresh();LocalStorageHandler.clear();makeNotice('Notice', 'Your local cache has been cleared. Please refresh the tab to make changes visible.');" class="btn btn-neutral" style="margin-bottom: 0;">Clear Cache</button>
+                        <button onclick="window.open('/refreshMirror')"; class="btn btn-neutral">Refresh Data</button>
+                    </div>
                 </div>
 
 
