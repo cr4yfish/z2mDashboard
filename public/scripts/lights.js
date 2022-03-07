@@ -1,7 +1,14 @@
 function toggleLightState(friendlyName) {
     console.log("toggling light state", friendlyName);
+
+    // figure out if slider or box
+    let element = document.getElementById(friendlyName);
+    if(element.querySelector(".lightSlider") != null) {
+        element = element.querySelector(".lightSlider");
+    }
+
     // get current state
-    const lightState = window.getComputedStyle(document.getElementById(friendlyName).querySelector(".lightSlider")), 
+    const lightState = window.getComputedStyle(element), 
             light = document.getElementById(friendlyName);
     console.log(lightState);
     let newState, newColor = lightState.backgroundColor, alpha;
