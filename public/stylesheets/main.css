@@ -44,7 +44,7 @@ h1, h2, a, label, .btn, #groups legend, .banner span {
     font-style: normal;
 }
 
-.lightBoxLabel, .lightBox span, .bannerContent {
+.lightBoxLabel, .lightBox span, .bannerContent, div {
     font-family: "Roboto", "sans-serif";
     font-weight: 400;
     font-style: normal;
@@ -616,4 +616,106 @@ a.active {
     z-index: 5;
     width: 100%;
     height: 100%;
+}
+
+
+.inputSection {
+    background-color: red;
+    min-width: 50%;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+}
+
+.timeInput {
+    color: white;
+}
+
+input[type=time] {
+    border: none;
+    color: #2a2c2d;
+    font-size: 14px;
+    font-family: helvetica;
+    width: 160px;
+  }
+  
+  /* Wrapper around the hour, minute, second, and am/pm fields as well as 
+  the up and down buttons and the 'X' button */
+  input[type=time]::-webkit-datetime-edit-fields-wrapper {
+    display: flex;
+  }
+  
+  /* The space between the fields - between hour and minute, the minute and 
+  second, second and am/pm */
+  input[type=time]::-webkit-datetime-edit-text {
+    padding: 19px 4px;
+  }
+  
+  /* The naming convention for the hour, minute, second, and am/pm field is
+  `-webkit-datetime-edit-{field}-field` */
+  
+  /* Hour */
+input[type=time]::-webkit-datetime-edit-hour-field {
+    background-color: #f2f4f5;
+    border-radius: 15%;
+    padding: 19px 13px;
+}
+  
+  /* Minute */
+input[type=time]::-webkit-datetime-edit-minute-field {
+    background-color: #f2f4f5;
+    border-radius: 15%;
+    padding: 19px 13px;
+}
+
+input[type=time]::-webkit-datetime-edit-minute-field:focus, input[type=time]::-webkit-datetime-edit-hour-field:focus {
+    background-color: var(--themeColor);
+    border-radius: 15%;
+    padding: 19px 13px;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(99%) sepia(0%) saturate(2%) hue-rotate(7deg) brightness(112%) contrast(101%);
+    cursor: pointer;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    background-color: var(--themeColor);
+    border-radius: 9px;
+}
+
+  /* AM/PM */
+input[type=time]::-webkit-datetime-edit-ampm-field {
+    background-color: #7155d3;
+    border-radius: 15%;
+    color: rgb(0, 0, 0);
+    padding: 19px 13px;
+}
+  
+  /* 'X' button for resetting/clearing time */
+input[type=time]::-webkit-clear-button {
+}
+  
+  /* Up/Down arrows for incrementing/decrementing the value */
+input[type=time]::-webkit-inner-spin-button {
+}
+  
+
+.repeatDayOption {
+    background-color: #464646;
+    color: white;
+    width: 2em;
+    text-align: center;
+    border-radius: 50%;
+    padding: .5rem;
+    margin: .25rem;
+    cursor: pointer;
+}
+
+.optionContainer {
+    display: flex;
+    flex-direction: column;
+    height: 6rem;
+    flex-wrap: wrap;
+    width:100%;
+    overflow: auto;
 }

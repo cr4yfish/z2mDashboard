@@ -160,7 +160,7 @@ app.get("/scenes", (req, res) => {
 })
 
 app.get("/automation", (req, res) => {
-    res.render("automation.ejs", {  })
+    res.render("automation.ejs", { themeColor })
 })
 
 app.get("/settings", (req, res) => {

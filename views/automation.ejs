@@ -13,8 +13,18 @@
             <%- include("partials/menu.ejs"); %>
         </div>
 
-        
+        <div class="content-wrapper">
+            <div>
+                <div class="input-wrapper">
+                    <label for="wakeTime">Wake-up time</label>
+                    <input class="timeInput" type="time" name="" id="wakeTime">
+                </div>
+            </div>
+        </div>
         
         <script src="/scripts/main.js" async defer></script>
+        <script src="/scripts/ripple.js" async defer></script>
+        <script src="/scripts/automations.js" async defer></script>
+        <%- include("partials/setSettings.ejs"); %>
     </body>
 </html>
