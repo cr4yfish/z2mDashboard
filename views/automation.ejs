@@ -15,10 +15,19 @@
 
         <div class="content-wrapper">
             <div>
+
+
                 <div class="input-wrapper">
-                    <label for="wakeTime">Wake-up time</label>
-                    <input class="timeInput" type="time" name="" id="wakeTime">
+                    <label style="width: 300px" for="wakeTime">Wake-up time</label>
+                    <input class="timeInput" type="time" name="" id="wakeTime" value="12:00">
                 </div>
+
+                <div class="input-wrapper" style="flex-direction: row; justify-content: space-evenly; align-items: center;">
+                    <button onclick="sendWakeTime();" class="btn btn-neutral" style="margin-bottom: 0;">Send</button>
+                    <button onclick="startWakeTime();" class="btn btn-neutral" style="margin-bottom: 0;">Start</button>
+                    <button onclick="stopWakeTime();"; class="btn btn-neutral">Stop</button>
+                </div>
+
             </div>
         </div>
         

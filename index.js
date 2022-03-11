@@ -184,7 +184,7 @@ app.get("/settings", (req, res) => {
             // add "#"
             value = `#${req.params.value}`;
         } else {
-            value = req.params.value
+            value = req.params.value;
         }
 
         parsedValue = parseInt(value);
@@ -193,14 +193,14 @@ app.get("/settings", (req, res) => {
         if(parsedValue.toString() == "NaN") 
         {
             // value is a string
-            state = `{"${req.params.key}": "${value}"}`
+            state = `{"${req.params.key}": "${value}"}`;
         } 
         else 
         {
             // value is a number
-            state = `{"${req.params.key}": ${value}}`
+            state = `{"${req.params.key}": ${value}}`;
         }
-        url = `zigbee2mqtt/${name}/set`
+        url = `zigbee2mqtt/${name}/set`;
         console.log(url, state);
 
         const request = { url: url, body: state };
@@ -352,7 +352,6 @@ app.get("/settings", (req, res) => {
 
     // new API
     app.post("/api/v2/queue", async (req, res) => {
-        console.log(typeof req.body, req.body);
         let data;
         try {
             data = await Queue.insertNewRequest(req.body.request, req.body.type);
@@ -496,11 +495,58 @@ app.get("/settings", (req, res) => {
         });
     })
 
+// ===== AUTOMATIONS
+
+    var cron = require("node-cron");
+
+    const scheduleTime = {
+        time: "* * * * *",
+        getScheduleTime: function() { return scheduleTime.time },
+        setScheduleTime: async function(hourTenths, hourSingle, minuteTenths, minuteSingle) {
+            scheduleTime.time = `* ${minuteTenths}${minuteSingle} ${hourTenths}${hourSingle} * * * `;
+        },
+        getWakeTimeRequest: function() {
+            return {
+                "url":"zigbee2mqtt/Schlafzimmer/set",
+                "body":"{\"state\": \"on\"}"
+            }
+        }
+    };
+
+    var wakeTimeTask = cron.schedule(scheduleTime.getScheduleTime(), async () => {
+        try {
+            await Queue.insertNewRequest(scheduleTime.getWakeTimeRequest(), "sendData");
+        } catch(e) {
+            console.log(e);
+        }
+    }, {
+        scheduled: false,
+        timezone: "Europe/Berlin"
+    });
+
+    app.post("/api/v2/automations/set/WakeTime", (req,res) => {
+        let wakeTime = req.body;
+        console.log(wakeTime);
+        scheduleTime.setScheduleTime(wakeTime.hourTenths, wakeTime.hourSingle, wakeTime.minuteTenths, wakeTime.minuteSingle);
+
+        wakeTime = `${wakeTime.hourTenths}${wakeTime.hourSingle}:${wakeTime.minuteTenths}${wakeTime.minuteSingle}`;
+        res.send({wakeTime: wakeTime});
+    })
+
+    app.post("/api/v2/automations/start", (req,res) => {
+        wakeTimeTask.start();
+        res.send("started");
+    })
+
+    app.post("/api/v2/automations/stop", (req,res) => {
+        wakeTimeTask.stop();
+        res.send("stopped");
+    })
+
+// ======
+
+
 // ===== REWORKED FUNCTIONS FOR QUEUE SYSTEM
-
-    
-
-
 
     // sendData params: @Request { url: String, body: Object }
     function sendData(Request) {
@@ -515,6 +561,8 @@ app.get("/settings", (req, res) => {
     }
 
 // ======
+
+
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
