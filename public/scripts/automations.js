@@ -65,6 +65,19 @@ function makeAutomations(automation) {
             action.textContent = automation.action;
         actionWrapper.appendChild(action);
 
+    if(automation.smoothStateChange) {
+        const smoothWrapper = document.createElement("div");
+            smoothWrapper.setAttribute("class", "actionWrapper");
+        autoWrapper.appendChild(smoothWrapper);
+
+        const smoothLabel = document.createElement("span");
+            smoothLabel.textContent = "Transition Speed";
+        smoothWrapper.appendChild(smoothLabel);
+        const smooth = document.createElement("span");
+            smooth.textContent = `${automation.transitionSpeed}%p/s`;
+        smoothWrapper.appendChild(smooth);
+    }
+   
         if(automation.weekday) {
             const weekdayTag = document.createElement("span");
                 weekdayTag.textContent = "weekday";
@@ -121,13 +134,27 @@ const removeWrapper = document.createElement("div");
 async function getCurrentAutomations() {
     await clearCurrentAutomations();
 
+
+    let diff;
+    if(localStorage.hasOwnProperty("lastUpdated")) {
+        const currentDate = new Date().getTime(),
+        lastUpdated = parseInt(localStorage.getItem("lastUpdated"));
+        diff = currentDate - lastUpdated;
+    } else {
+        diff = false;
+    }
+
+    const _LASTUPDATE_DIFF_IN_DAYS = 2;
+
+    // updates localStorage if no cache was made or if
+    // lastUpdate is longer than n days ago
     if(true) {
         const url = `${HOST}/api/v2/automations/get`;
         fetch(url).then(res => res.json()).then(res => {
             console.log(res);
     
             localStorage.setItem("automations", JSON.stringify(res));
-    
+            localStorage.setItem("lastUpdated", cleanTimeString(getTimeString()));
             res.forEach(automation => {
                 makeAutomations(automation);
             })
@@ -156,6 +183,8 @@ function removeAutomation(id) {
     fetch(url, options).then(res => {
         console.log(res);
         document.getElementById(id).remove();
+        localStorage.removeItem("automations");
+        localStorage.removeItem("lastUpdated");
     })
 }
 
@@ -209,13 +238,16 @@ function saveAutomation() {
         automationToSave[input.id] = input.value;
     })
 
+    // checkbox
+    automationToSave["automationSmoothStateChange"] = document.getElementById("automationSmoothStateChange").checked;
+
     // exit when no nickname given
     if(automationToSave.automationName.length == 0) {
         alert("Please enter an automation Name");
         return;
     }
 
-    // repeat
+    // repeats
     const repeatTags = document.querySelectorAll("#automationRepeat .tag");
     repeatTags.forEach(tag => {
         let rawTag = tag.dataset.tag;
@@ -252,6 +284,8 @@ function saveAutomation() {
         console.log(res);
         makeNotice("Automation saved", "Your new Automation has been saved");
         document.getElementById("newAutomation").style.display = "none";
+        localStorage.removeItem("automations");
+        localStorage.removeItem("lastUpdated");
         getCurrentAutomations();
     })    
 }
@@ -263,4 +297,27 @@ function toggleTag(tag) {
     } else {
         tag.dataset.active = "true";
     }
+}
+
+// TIME UTILS
+
+// returns normalized timestrings -> 0h 0min 0sec
+function cleanTimeString(str) {
+    var date = new Date(str);
+
+    let hours = date.getHours() * 3600000;
+    let minutes = date.getMinutes() * 60000;
+    let seconds = date.getSeconds() * 1000;
+
+    str = str - (hours+minutes+seconds) + 1000;
+    //console.log(new Date(str));
+    return str;
+}
+
+function getTimeString() {
+    return new Date().getTime();
+}
+
+function getOneDayInMs() {
+    return 86400000;
 }

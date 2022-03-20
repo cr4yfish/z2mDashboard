@@ -303,11 +303,14 @@ a.active {
 .btn-round {
     background-color: var(--themeColor);
     color: var(--themeBG);
-    border-radius: 2rem;
+    border-radius: 1rem;
     padding: 1rem;
-    display: flex;
+    display: flex !important;
     justify-content: center;
-    align-items: center;
+    align-items: center !important;
+    padding: 0;
+    width: 3.5rem;
+    height: 4rem;
     position: fixed;
     bottom: 10%;
     right: 15%;
@@ -743,7 +746,7 @@ input[type=time] {
     input[type=time] {
         color: white;
     }
-}
+} 
 
 .repeatDayOption {
     background-color: #464646;
@@ -807,6 +810,7 @@ input[type=time] {
 .automationWrapper {
     background: #3D3D3D;
     color: white;
+    border-color: #676767;
     padding: .5rem 1rem;
     border-radius: 9px;
     cursor: pointer;
@@ -829,6 +833,7 @@ input[type=time] {
     box-shadow: 0 0 20px var(--themeBG);
     background: var(--themeColor);
     box-shadow: 0 0 25px var(--themeBG);
+    border-color: var(--themeBG);
 }
 
 .autoTitleWrapper {
@@ -838,7 +843,8 @@ input[type=time] {
 }
 
 .actionWrapper {
-    border: solid 1px var(--themeBG);
+    border: solid 1px;
+    border-color: inherit;
     display: flex;
     flex-direction: row;
     justify-content: space-between;

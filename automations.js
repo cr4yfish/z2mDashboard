@@ -5,7 +5,7 @@ let Queue = require("./queue");
 class Automation {
     time; rooms; action; request; nickname; active;
     weekday; weekend; scheduleRule; dayStart; dayEnd;
-    automationTask;
+    automationTask; smoothStateChange; transitionSpeed;
     
     // constructor
         constructor(reqAutomation, makeDatabaseEntry = true) {
@@ -17,11 +17,14 @@ class Automation {
             this.weekend = reqAutomation.weekend;
             this.dayStart = reqAutomation.dayStart;
             this.dayEnd = reqAutomation.dayEnd;
+            this.smoothStateChange = reqAutomation.smoothStateChange;
+            this.transitionSpeed = reqAutomation.transitionSpeed;
             this.makeRule();
             this.request = {
                 url: `zigbee2mqtt/${this.rooms}/set`,
                 body: `{\"state\": \"${this.action}\"}`,
             };
+            this.makeRequest();
             this.active = true;
             if(makeDatabaseEntry) {
                 this.saveInDatabase();
@@ -73,6 +76,8 @@ class Automation {
                 weekday: this.weekday,
                 dayStart: this.dayStart,
                 dayEnd: this.dayEnd,
+                smoothStateChange: this.smoothStateChange,
+                transitionSpeed: this.transitionSpeed,
             };
         }
 
@@ -101,7 +106,15 @@ class Automation {
         }
 
     // internal
-        
+        makeRequest() {
+            let that = this, mod;
+            if(this.action == "off") {
+                mod = "-";
+            }
+            if(this.smoothStateChange) {
+                this.request.body = `{\"brightness_move\": \"${mod}${this.transitionSpeed}"}`;
+            }
+        }
 
     // output
         getAutomationRequest = function() {

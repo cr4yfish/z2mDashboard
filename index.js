@@ -520,6 +520,8 @@ app.get("/settings", (req, res) => {
             action: newAutomation.automationActionSelect,
             weekday: false,
             weekend: false,
+            smoothStateChange: newAutomation.automationSmoothStateChange,
+            transitionSpeed: newAutomation.automationTransitionSpeed,
         }
 
         if(newAutomation.weekday) {
@@ -537,6 +539,7 @@ app.get("/settings", (req, res) => {
             formattedAutomation.dayEnd = 6;
         }
 
+
         formattedAutomation.time = {
             minute: `${formattedAutomation.time.minuteTenths}${formattedAutomation.time.minuteSingle}`,
             hour: `${formattedAutomation.time.hourTenths}${formattedAutomation.time.hourSingle}`,
@@ -544,20 +547,24 @@ app.get("/settings", (req, res) => {
 
         // TODO: CHECK IF NICKNAME IS DOUBLE
         memoryAutomations[formattedAutomation.nickname] = new Automation(formattedAutomation);
+
+        // neither -> single action
+        if(!newAutomation.weekday && newAutomation.weekend) {
+            // do something here, idk what
+        }
+
         res.send(memoryAutomations[formattedAutomation.nickname].automationTask.nextInvocation());
     })
 
     app.post("/api/v2/automations/start", (req,res) => {
         const reqName = req.body.automationName;
         memoryAutomations[reqName].startAutomation();
-
         res.send("started");
     })
 
     app.post("/api/v2/automations/stop", (req,res) => {
         const reqName = req.body.automationName;
         memoryAutomations[reqName].stopAutomation();
-
         res.send("stopped");
     })
 
@@ -596,8 +603,6 @@ app.get("/settings", (req, res) => {
     }
 
 // ======
-
-
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
