@@ -1,1 +1,1 @@
-{"rooms":"all","time":{"minute":"46","hour":"16"},"action":"off","nickname":"transition test","active":true,"weekend":true,"weekday":false,"dayStart":0,"dayEnd":0,"smoothStateChange":true,"transitionSpeed":"0.016","_id":"sXUtrb9qLXiQIDgP"}
+{"rooms":"Wohnzimmer","time":{"minute":"54","hour":"20"},"action":"on","nickname":"i","active":true,"weekend":true,"weekday":true,"dayStart":0,"dayEnd":6,"smoothStateChange":true,"transitionSpeed":"1","_id":"xeLJtbw0rvnvHO3t"}

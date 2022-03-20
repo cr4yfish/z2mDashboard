@@ -1,13 +1,3 @@
-const wakeTimeEle = document.getElementById("wakeTime");
-let timeout = null;
-wakeTimeEle.addEventListener("input", function(e) {
-    clearTimeout(timeout)
-    
-    timeout = setTimeout(function() {
-
-    }, 3000);
-});
-
 function closeOverlay() {
     document.getElementById("colorOverlay").style.display = "none";
     try {
@@ -134,6 +124,16 @@ const removeWrapper = document.createElement("div");
 async function getCurrentAutomations() {
     await clearCurrentAutomations();
 
+    // Fill groups
+    const groups = localStorage.getItem("groups").split(",");
+    groups.forEach(group => {
+        const parent = document.getElementById("automationSelectAffectedRooms");
+
+        const option = document.createElement("option");
+            option.textContent = group;
+            option.setAttribute("value", group);
+        parent.appendChild(option);
+    })
 
     let diff;
     if(localStorage.hasOwnProperty("lastUpdated")) {

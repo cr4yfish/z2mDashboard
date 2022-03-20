@@ -32,6 +32,7 @@ class Automation {
             let that = this;
             this.automationTask = schedule.scheduleJob(this.scheduleRule, async function() {
                 try {
+                    console.log("Performing job");
                     await Queue.insertNewRequest(that.request, "sendData");
                 } catch(e) {
                     console.error(e);
@@ -107,12 +108,13 @@ class Automation {
 
     // internal
         makeRequest() {
-            let that = this, mod;
+            let that = this, mod = "", defBright = 2;
             if(this.action == "off") {
                 mod = "-";
+                defBright = 99;
             }
             if(this.smoothStateChange) {
-                this.request.body = `{\"brightness_move\": \"${mod}${this.transitionSpeed}"}`;
+                this.request.body = `{\"state\": \"on",\"brightness\": \"${defBright}",\"brightness_move\": \"${mod}${this.transitionSpeed}"}`;
             }
         }
 
