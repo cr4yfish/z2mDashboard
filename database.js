@@ -131,5 +131,68 @@ const makeNewDevices = function(devices, groups) {
     })
 }
 
+db.automations = new Datastore({
+    filename: "./database/automations.db", autoload: true,
+})
+db.automations.loadDatabase();
+
+const makeNewAutomation = function(automation) {
+    return new Promise((resolve, reject) => {
+        db.automations.insert(automation, function(err, docs) {
+            if(!err) {
+                db.automations.persistence.compactDatafile();
+                resolve(docs);
+            } else {
+                reject(err, docs);
+            }
+        })
+    })
+}
+
+const getAllAutomations = function() {
+    return new Promise((resolve, reject) => {
+        db.automations.find({}, function(err, docs) {
+            if(!err) {
+                resolve(docs);
+            } else {
+                reject(err, docs);
+            }
+        })
+    })
+}
+
+// replaced document by given id
+const updateAutomation = function(newState) {
+    return new Promise((resolve, reject) => {
+        db.automations.update({ nickname : newState.nickname }, newState, function(err, numReplaced) {
+            if(!err) {
+                db.automations.persistence.compactDatafile();
+                resolve(numReplaced);
+            } else {
+                reject(err);
+            }
+        })
+    })
+}
+
+// remove automation
+const removeAutomation = function(id) {
+    return new Promise((resolve, reject) => {
+        db.automations.remove({ _id: id }, function(err, numRemoved) {
+            if(!err) {
+                db.automations.persistence.compactDatafile();
+                resolve(numRemoved);
+            } else {
+                reject(err);
+            }
+        })
+    })
+}
+
+exports.makeNewAutomation = makeNewAutomation;
+exports.getAllAutomations = getAllAutomations;
+exports.updateAutomation = updateAutomation;
+exports.removeAutomation = removeAutomation;
+
 console.log("Database module loaded")
 console.log("==========")

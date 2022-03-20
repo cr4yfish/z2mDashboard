@@ -22,7 +22,7 @@
     })
 })();
 
-const HOST = 'http://localhost:30000';
+const HOST = 'http://192.168.1.102:30000';
 //const HOST = 'http://192.168.0.100:30000';
 
 function sleep(ms) {
@@ -37,23 +37,25 @@ const LocalStorageHandler = {
     },
 
     add: function(newItem) {
-        console.log("localstorageHandler", newItem);
         if(!this.array.includes(newItem)) {
             this.array.push(newItem);
         }
     },
 
     clear: function () {
-        console.log("Clearing", this.get());
+        LocalStorageHandler.refresh();
         this.array.forEach(function (item) {
             localStorage.removeItem(item);
-        })
+        });
+        makeNotice('Notice', 
+                    'Your local cache has been cleared. Please refresh the tab to make changes visible.');
     },
 
     refresh: function() {
-        console.log("Refreshing list");
         Object.keys(localStorage).forEach(key => {
-            this.add(key);
+            if(!localStorage.hasOwnProperty(key)) {
+                this.add(key);
+            }
         })
     }
 }

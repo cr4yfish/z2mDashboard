@@ -12,7 +12,7 @@
     const { config } = require("process");
     const { type } = require("os");
     const { send } = require("express/lib/response");
-    const { resolve } = require("path");
+    const { resolve, format } = require("path");
     const { request } = require("http");
     const { handle } = require("express/lib/application");
     app.set("view engine", "ejs");
@@ -109,7 +109,6 @@ function refreshSettings() {
 
     // writes new data to configfile
     app.post("/writeConfig", (req,res) => {
-        console.log("new write config request", req.body);
 
         jsonfile.writeFile(configfile, req.body, function (err) {
             if(!err) {
@@ -497,50 +496,86 @@ app.get("/settings", (req, res) => {
 
 // ===== AUTOMATIONS
 
-    var cron = require("node-cron");
+    let { Automation } = require("./automations");
 
-    const scheduleTime = {
-        time: "* * * * *",
-        getScheduleTime: function() { return scheduleTime.time },
-        setScheduleTime: async function(hourTenths, hourSingle, minuteTenths, minuteSingle) {
-            scheduleTime.time = `* ${minuteTenths}${minuteSingle} ${hourTenths}${hourSingle} * * * `;
-        },
-        getWakeTimeRequest: function() {
-            return {
-                "url":"zigbee2mqtt/Schlafzimmer/set",
-                "body":"{\"state\": \"on\"}"
-            }
+    let memoryAutomations = {};
+
+    (async function refreshAutomations() {
+        const automations = await database.getAllAutomations();
+        automations.forEach(automation => {
+            memoryAutomations[automation.nickname] = new Automation(automation, false);
+        })
+    })();
+
+    app.post("/api/v2/automations/set", (req,res) => {
+        const newAutomation = req.body;
+
+        let formattedAutomation = {
+            time: newAutomation.scheduleTime,
+            days: "",
+            dayStart: 0,
+            dayEnd: 0,
+            rooms: newAutomation.automationSelectAffectedRooms,
+            nickname: newAutomation.automationName,
+            action: newAutomation.automationActionSelect,
+            weekday: false,
+            weekend: false,
         }
-    };
 
-    var wakeTimeTask = cron.schedule(scheduleTime.getScheduleTime(), async () => {
-        try {
-            await Queue.insertNewRequest(scheduleTime.getWakeTimeRequest(), "sendData");
-        } catch(e) {
-            console.log(e);
+        if(newAutomation.weekday) {
+            formattedAutomation.weekday = true;
+            formattedAutomation.dayStart = 1;
+            formattedAutomation.dayEnd = 5;
         }
-    }, {
-        scheduled: false,
-        timezone: "Europe/Berlin"
-    });
+        if(newAutomation.weekend) {
+            formattedAutomation.weekend = true;
+            formattedAutomation.days = 6;
+            formattedAutomation.dayEnd = 0;
+        }
+        if(newAutomation.weekday && newAutomation.weekend) {
+            formattedAutomation.dayStart = 0;
+            formattedAutomation.dayEnd = 6;
+        }
 
-    app.post("/api/v2/automations/set/WakeTime", (req,res) => {
-        let wakeTime = req.body;
-        console.log(wakeTime);
-        scheduleTime.setScheduleTime(wakeTime.hourTenths, wakeTime.hourSingle, wakeTime.minuteTenths, wakeTime.minuteSingle);
+        formattedAutomation.time = {
+            minute: `${formattedAutomation.time.minuteTenths}${formattedAutomation.time.minuteSingle}`,
+            hour: `${formattedAutomation.time.hourTenths}${formattedAutomation.time.hourSingle}`,
+        }
 
-        wakeTime = `${wakeTime.hourTenths}${wakeTime.hourSingle}:${wakeTime.minuteTenths}${wakeTime.minuteSingle}`;
-        res.send({wakeTime: wakeTime});
+        // TODO: CHECK IF NICKNAME IS DOUBLE
+        memoryAutomations[formattedAutomation.nickname] = new Automation(formattedAutomation);
+        res.send(memoryAutomations[formattedAutomation.nickname].automationTask.nextInvocation());
     })
 
     app.post("/api/v2/automations/start", (req,res) => {
-        wakeTimeTask.start();
+        const reqName = req.body.automationName;
+        memoryAutomations[reqName].startAutomation();
+
         res.send("started");
     })
 
     app.post("/api/v2/automations/stop", (req,res) => {
-        wakeTimeTask.stop();
+        const reqName = req.body.automationName;
+        memoryAutomations[reqName].stopAutomation();
+
         res.send("stopped");
+    })
+
+    app.get("/api/v2/automations/get", async (req,res) => {
+        database.getAllAutomations().then(automations => {
+            res.send(automations);
+        })
+    })
+
+    app.post("/api/v2/automations/remove", async (req,res) => {
+        try {
+            database.removeAutomation(req.body.id).then(removed => {
+                res.sendStatus(200);
+            })
+        } catch (e) {
+            res.sendStatus(500);
+            console.error("Error", removed);
+        }
     })
 
 // ======

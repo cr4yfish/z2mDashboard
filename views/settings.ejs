@@ -21,7 +21,6 @@
         </div>
 
             <div class="content-wrapper">
-                
                 <div>
                     <div class="input-wrapper">
                         <label for="ipSettingsInput">IP address</label>
@@ -32,12 +31,12 @@
                         <label for="portSettingsInput">Port</label>
                         <input type="number" name="" id="portSettingsInput" placeholder="1883">
                     </div>
-
+    
                     <div class="input-wrapper">
                         <label for="portSettingsInput">Queue Refresh timer</label>
                         <input type="number" name="queue_refresh_timer" id="queue_refresh_timer" placeholder="2000">
                     </div>
-
+    
                     
                     <div class="input-wrapper">
                         <label for="portSettingsInput">Queue Timeout time</label>
@@ -52,7 +51,7 @@
                         <button onclick="checkUpdates()" anim="ripple" class="btn btn-neutral"><i style="font-size: 2rem;" class="fa fa-redo"></i></button>
                     </div>
     
-                    <div class="input-wrapper" style="width: calc(276px - 0.5rem);">
+                    <div class="input-wrapper" >
                         <label for="themeColorSettingsInput">Theme color</label>
                         <div style="display: flex; flex-direction: column; height: 4rem;flex-wrap: wrap; width:100%; overflow: auto;">
                             <div data-active="true" onclick="setActiveColor(this);" class="themeColorOption" data-bg="#59216c" data-primary="#f3a9ff"></div>
@@ -64,15 +63,15 @@
                             <div onclick="setActiveColor(this);" class="themeColorOption" data-bg="#511d76" data-primary="#b740ff"></div>
                         </div>
                     </div>
-
+    
                     <div class="input-wrapper" style="flex-direction: row; justify-content: space-evenly; align-items: center;">
-                        <button onclick="LocalStorageHandler.refresh();LocalStorageHandler.clear();makeNotice('Notice', 'Your local cache has been cleared. Please refresh the tab to make changes visible.');" class="btn btn-neutral" style="margin-bottom: 0;">Clear Cache</button>
+                        <button onclick="LocalStorageHandler.clear();" class="btn btn-neutral" style="margin-bottom: 0;">Clear Cache</button>
                         <button onclick="window.open('/refreshMirror')"; class="btn btn-neutral">Refresh Data</button>
                     </div>
+    
+    
+                    <button onclick="sendSettings();" anim="ripple" class="btn btn-primary" style="margin-bottom: 2rem;">save</button>
                 </div>
-
-
-                <button onclick="sendSettings();" anim="ripple" class="btn btn-primary">save</button>
             </div>
 
         

@@ -6,7 +6,53 @@
 
         <title>Automation</title>
     </head>
-    <body>
+    <body onload="getCurrentAutomations();">
+
+        <div id="colorOverlay" onclick="closeOverlay();"></div>
+
+        <div id="newAutomation">
+            <div class="title">
+                <h1>Add new Automation</h1>
+            </div>
+
+            <div class="content-wrapper">
+                <div>
+                    <div class="input-wrapper">
+                        <label for="">Name</label>
+                        <input class="toSave" type="text" name="" id="automationName" placeholder="Automation Name">
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="">Time</label>
+                        <input class="toSave" type="time" name="" id="automationTime" value="12:00">
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="">Repeat</label>
+                        <div id="automationRepeat">
+                            <span class="tag" data-tag="weekday" onclick="toggleTag(this);">Weekday</span>
+                            <span class="tag" data-tag="weekend" onclick="toggleTag(this);" >Weekend</span>
+                        </div>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="">Action</label>
+                        <select class="toSave" name="" id="automationActionSelect">
+                            <option value="on">Turn on</option>
+                            <option value="off">Turn off</option>
+                        </select>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="">Affected Rooms</label>
+                        <select class="toSave" name="" id="automationSelectAffectedRooms">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+    
+                    <div class="input-wrapper" style="background: transparent; border: none;">
+                        <button class="btn btn-primary" onclick="saveAutomation();">Save</button>
+                        <button class="btn btn-abort" onclick="closeNewAutomation();">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <div  anim="ripple" class="title">
             <h1>Automation</h1>
@@ -16,21 +62,16 @@
         <div class="content-wrapper">
             <div>
 
-
-                <div class="input-wrapper">
-                    <label style="width: 300px" for="wakeTime">Wake-up time</label>
-                    <input class="timeInput" type="time" name="" id="wakeTime" value="12:00">
+                <div class="input-wrapper" style="background-color: transparent; border: none;">
+                    <label style="margin-bottom: 1rem;">Current Automations</label>
+                    <div id="current_automations"></div>
                 </div>
 
-                <div class="input-wrapper" style="flex-direction: row; justify-content: space-evenly; align-items: center;">
-                    <button onclick="sendWakeTime();" class="btn btn-neutral" style="margin-bottom: 0;">Send</button>
-                    <button onclick="startWakeTime();" class="btn btn-neutral" style="margin-bottom: 0;">Start</button>
-                    <button onclick="stopWakeTime();"; class="btn btn-neutral">Stop</button>
-                </div>
-
+                <i class="fa-solid fa-plus btn-round" onclick="newAutomation();"></i>
             </div>
         </div>
         
+        <script src="/assets/hammer.js"></script>
         <script src="/scripts/main.js" async defer></script>
         <script src="/scripts/ripple.js" async defer></script>
         <script src="/scripts/automations.js" async defer></script>

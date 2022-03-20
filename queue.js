@@ -45,7 +45,7 @@ const insertNewRequest = function(Request, reqType) {
 
                 clearInterval(reqCheck);
 
-            } else if (timer == __REQUEST_QUEUE_TIMEOUT_TIME) {
+            } else if (timer >= __REQUEST_QUEUE_TIMEOUT_TIME) {
                 // timeout
                 console.log("timeout");
                 const unhandledRequest = RequestQueue.shift();
