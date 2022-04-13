@@ -67,7 +67,6 @@ function makeAutomations(automation) {
             smooth.textContent = `${automation.transitionSpeed}%p/s`;
         smoothWrapper.appendChild(smooth);
     }
-   
         if(automation.weekday) {
             const weekdayTag = document.createElement("span");
                 weekdayTag.textContent = "weekday";
@@ -116,24 +115,24 @@ const removeWrapper = document.createElement("div");
         } else {
             removeWrapper.style.height = "0px";
         }
-    
-})
-
+    })
 } 
 
 async function getCurrentAutomations() {
     await clearCurrentAutomations();
 
     // Fill groups
-    const groups = localStorage.getItem("groups").split(",");
-    groups.forEach(group => {
-        const parent = document.getElementById("automationSelectAffectedRooms");
-
-        const option = document.createElement("option");
-            option.textContent = group;
-            option.setAttribute("value", group);
-        parent.appendChild(option);
-    })
+    if(!document.getElementById("automationSelectAffectedRooms").querySelectorAll("option").length > 0) {
+        const groups = localStorage.getItem("groups").split(",");
+        groups.forEach(group => {
+            const parent = document.getElementById("automationSelectAffectedRooms");
+    
+            const option = document.createElement("option");
+                option.textContent = group;
+                option.setAttribute("value", group);
+            parent.appendChild(option);
+        })
+    }
 
     let diff;
     if(localStorage.hasOwnProperty("lastUpdated")) {
@@ -220,7 +219,19 @@ function toggleAutomation(ele) {
     })
 }
 
+function clearCurrentAutomations() {
+    const newAutomationWrapper = document.getElementById("newAutomation");
+    try {
+        newAutomationWrapper.querySelectorAll("input").forEach(input => {
+            input.value = "";
+        })
+    } catch(e) {
+        console.error(e);
+    }
+}
+
 function newAutomation() {
+    clearNewAutomationForm();
     document.getElementById("newAutomation").style.display = "block";
 }
 

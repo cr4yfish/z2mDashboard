@@ -326,7 +326,7 @@ a.active {
 
 
 #groups, #scenes, #GroupScreenScenes, #GroupScreenLights {
-    width: 90%;
+    width: 70%;
     margin-left: 50%;
     transform: translateX(-50%);
 }
@@ -345,7 +345,6 @@ a.active {
 
 .light-card .card-body {
     height: 100%;
-    text-align: center;
     display: flex;
     flex-direction: column;
     align-content: center;

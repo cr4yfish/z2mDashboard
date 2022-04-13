@@ -1,17 +1,21 @@
 function toggleLightState(friendlyName) {
     console.log("toggling light state", friendlyName);
 
+    let isSlider = false;
     // figure out if slider or box
     let element = document.getElementById(friendlyName);
     if(element.querySelector(".lightSlider") != null) {
         element = element.querySelector(".lightSlider");
+        isSlider = true;
     }
 
     // get current state
     const lightState = window.getComputedStyle(element), 
             light = document.getElementById(friendlyName);
     console.log(lightState);
-    let newState, newColor = lightState.backgroundColor, alpha;
+    let newState, newColor, alpha;
+
+    newColor = lightState["background-color"];
 
     // check if theres a dataset
     if(!light.dataset.hasOwnProperty("ison")) {
@@ -47,7 +51,7 @@ function toggleLightState(friendlyName) {
             newColor = `rgba${newColor.substring(startIndex, lastIndex - 1)}, ${alpha})`;
         }
     
-        lightState.style.backgroundColor = newColor;
+        light.style.backgroundColor = newColor;
         console.log(newColor);
     } catch (e) {console.log(e);}
 
@@ -62,11 +66,12 @@ function toggleLightState(friendlyName) {
         console.log("Is done?", res);
 
         // update DOM state
-        if(res.done == true) {
+        if(res.done) {
             // light has been successfully switched
             // change DOM props
             
-            const icon = document.getElementById(friendlyName).querySelector(`.fa-power-off`);
+            if(isSlider) {
+                const icon = document.getElementById(friendlyName).querySelector(`.fa-power-off`);
             
                 if(newState) {
                     icon.style.backgroundColor = "white";
@@ -75,6 +80,16 @@ function toggleLightState(friendlyName) {
                     icon.style.backgroundColor = "#ffffff29";
                     icon.style.color = "#ffffff75";
                 }
+            } else {
+                // is lightBox
+                if(light.dataset.ison) {
+                    light.style.backgroundColor = "blue";
+                } else {
+                    light.style.backgroundColor = "red";
+                }
+
+            }
+            
 
         }
     } )
