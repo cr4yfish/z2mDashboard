@@ -4,7 +4,9 @@
     + make a local copy -- DONE
     + log uses in a database -- NOT STARTED
 
-- Automations: If weekend nor weekday is selected, an automation will
+- Automations: 
+    . If weekend nor weekday is selected, an automation will
                 trigger everyday -> expected is single time
+    . Change animation time to start ahead of schedule
 
 - Change Frontend to use new Queue system -- COMPLETE

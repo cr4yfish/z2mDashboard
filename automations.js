@@ -1,4 +1,5 @@
 const schedule = require("node-schedule");
+const { resolve } = require("path");
 let database = require("./database");
 let Queue = require("./queue");
 
@@ -6,26 +7,11 @@ class Automation {
     time; rooms; action; request; nickname; active;
     weekday; weekend; scheduleRule; dayStart; dayEnd;
     automationTask; smoothStateChange; transitionSpeed;
+    id;
     
     // constructor
         constructor(reqAutomation, makeDatabaseEntry = true) {
-            this.nickname = reqAutomation.nickname;
-            this.time = reqAutomation.time;
-            this.rooms = reqAutomation.rooms;
-            this.action = reqAutomation.action;
-            this.weekday = reqAutomation.weekday;
-            this.weekend = reqAutomation.weekend;
-            this.dayStart = reqAutomation.dayStart;
-            this.dayEnd = reqAutomation.dayEnd;
-            this.smoothStateChange = reqAutomation.smoothStateChange;
-            this.transitionSpeed = reqAutomation.transitionSpeed;
-            this.makeRule();
-            this.request = {
-                url: `zigbee2mqtt/${this.rooms}/set`,
-                body: `{\"state\": \"${this.action}\"}`,
-            };
-            this.makeRequest();
-            this.active = true;
+            this.setObject(reqAutomation);
             if(makeDatabaseEntry) {
                 this.saveInDatabase();
             };
@@ -37,7 +23,6 @@ class Automation {
                 } catch(e) {
                     console.error(e);
                 }
-                
             });
         }
 
@@ -66,6 +51,26 @@ class Automation {
             return this.nickname;
         }
 
+        setObject(reqAutomation) {
+            this.nickname = reqAutomation.nickname;
+            this.time = reqAutomation.time;
+            this.rooms = reqAutomation.rooms;
+            this.action = reqAutomation.action;
+            this.weekday = reqAutomation.weekday;
+            this.weekend = reqAutomation.weekend;
+            this.dayStart = reqAutomation.dayStart;
+            this.dayEnd = reqAutomation.dayEnd;
+            this.smoothStateChange = reqAutomation.smoothStateChange;
+            this.transitionSpeed = reqAutomation.transitionSpeed;
+            this.makeRule();
+            this.request = {
+                url: `zigbee2mqtt/${this.rooms}/set`,
+                body: `{\"state\": \"${this.action}\"}`,
+            };
+            this.makeRequest();
+            this.active = true;
+        }
+
         getObject() {
             return { 
                 rooms: this.rooms, 
@@ -79,6 +84,7 @@ class Automation {
                 dayEnd: this.dayEnd,
                 smoothStateChange: this.smoothStateChange,
                 transitionSpeed: this.transitionSpeed,
+                id: this.id,
             };
         }
 
@@ -90,12 +96,37 @@ class Automation {
             this.scheduleRule.tz = "Europe/Berlin";
         }
 
-        saveInDatabase() {
+        async saveInDatabase() {
             try {
-                database.makeNewAutomation(this.getObject());
+                const id = await database.makeNewAutomation(this.getObject());
+                this.id = id;
             } catch (e) {
                 console.error(e);
             }
+        }
+
+        async updateInDatabase() {
+            return new Promise(async (resolve,reject) => {
+                try {
+                    await database.updateAutomation(this.getObject());
+                    resolve();
+                } catch (e) {
+                    console.error(e);
+                    reject(e);
+                }
+            })
+        }
+
+        getIdByName() {
+            return new Promise((resolve,reject) => {
+                database.getIdByName(this.nickname).then((id) => {
+                    resolve(id);
+                })
+            })
+        }
+
+        getId() {
+            return this.id;
         }
 
         update() {

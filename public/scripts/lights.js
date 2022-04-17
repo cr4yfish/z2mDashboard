@@ -121,6 +121,25 @@ function makeSwiper() {
         this.event.stopPropagation();
     }
 
+    function removePlaceholders() {
+        return new Promise((reolve, reject) => {
+            try {
+                // lightboxes
+                document.querySelectorAll(".lightBox").forEach(lightBox => {
+                    lightBox.remove();
+                })
+                // sliders
+                document.querySelectorAll(".light-card").forEach(card => {
+                    card.remove();
+                })
+                resolve();
+            } catch(e) {
+                console.error(e);
+                reject();
+            }
+        })
+    }
+
 //
 
 
@@ -148,6 +167,8 @@ function makeSwiper() {
         console.log("getting groups from lights");
         getGoupsNetwork()
         .then(groups => {
+            // remove placeholders
+            removePlaceholders();
             groups.forEach(async function(group) {
                 const parent = document.getElementById("groups"),
                       randomColor = arrayOfRandomColors[Math.floor(Math.random() * arrayOfRandomColors.length)];

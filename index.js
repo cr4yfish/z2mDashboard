@@ -498,16 +498,17 @@ app.get("/settings", (req, res) => {
 
     let { Automation } = require("./automations");
 
+    // holds array of automations. Get one by inserting the id
     let memoryAutomations = {};
 
     (async function refreshAutomations() {
         const automations = await database.getAllAutomations();
         automations.forEach(automation => {
-            memoryAutomations[automation.nickname] = new Automation(automation, false);
+            memoryAutomations[automation._id] = new Automation(automation, false);
         })
     })();
 
-    app.post("/api/v2/automations/set", (req,res) => {
+    app.post("/api/v2/automations/set/:id", async (req,res) => {
         const newAutomation = req.body;
 
         let formattedAutomation = {
@@ -539,38 +540,54 @@ app.get("/settings", (req, res) => {
             formattedAutomation.dayEnd = 6;
         }
 
-
         formattedAutomation.time = {
             minute: `${formattedAutomation.time.minuteTenths}${formattedAutomation.time.minuteSingle}`,
             hour: `${formattedAutomation.time.hourTenths}${formattedAutomation.time.hourSingle}`,
         }
 
-        // TODO: CHECK IF NICKNAME IS DOUBLE
-        memoryAutomations[formattedAutomation.nickname] = new Automation(formattedAutomation);
+       
+        if(req.params.id != "new") {
+            // update old automation
+            const automation = memoryAutomations[req.params.id];
+                automation.stopAutomation();
+                automation.setObject(formattedAutomation);
+                await automation.updateInDatabase();
+                automation.startAutomation();
 
-        // neither -> single action
-        if(!newAutomation.weekday && newAutomation.weekend) {
-            // do something here, idk what
+                res.send(memoryAutomations[automation.getId()].automationTask.nextInvocation());
+
+        } else {
+            // make new automation
+
+            // TODO: CHECK IF NICKNAME IS DOUBLE
+            const automation = new Automation(formattedAutomation);
+            automation.getIdByName().then( (id) => {
+                memoryAutomations[id] = automation;
+
+                res.send(automation.automationTask.nextInvocation());
+            })
         }
-
-        res.send(memoryAutomations[formattedAutomation.nickname].automationTask.nextInvocation());
     })
 
     app.post("/api/v2/automations/start", (req,res) => {
-        const reqName = req.body.automationName;
-        memoryAutomations[reqName].startAutomation();
+        memoryAutomations[req.body.id].startAutomation();
         res.send("started");
     })
 
     app.post("/api/v2/automations/stop", (req,res) => {
-        const reqName = req.body.automationName;
-        memoryAutomations[reqName].stopAutomation();
+        memoryAutomations[req.body.id].stopAutomation();
         res.send("stopped");
     })
 
     app.get("/api/v2/automations/get", async (req,res) => {
         database.getAllAutomations().then(automations => {
             res.send(automations);
+        })
+    })
+
+    app.get("/api/v2/automations/get/:id", async (req,res) => {
+        database.getAutomation(req.params.id).then(automation => {
+            res.send(automation);
         })
     })
 

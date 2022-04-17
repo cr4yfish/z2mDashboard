@@ -1,3 +1,4 @@
+// helper functions
 function closeOverlay() {
     document.getElementById("colorOverlay").style.display = "none";
     try {
@@ -6,6 +7,26 @@ function closeOverlay() {
     } catch (e) {
         console.log(e);
     }
+}
+
+function stopProp(ele) {
+    console.log(ele);
+    ele.stopPropagation();
+}
+
+function clearNewAutomation() {
+    return new Promise((resolve,reject) => {
+        const newAutomationWrapper = document.getElementById("newAutomation");
+        try {
+            newAutomationWrapper.querySelectorAll("input").forEach(input => {
+                input.value = "";
+            })
+            resolve();
+        } catch(e) {
+            console.error(e);
+            reject();
+        }
+    })
 }
 
 async function clearCurrentAutomations() {
@@ -19,6 +40,51 @@ async function clearCurrentAutomations() {
     })
 }
 
+function closeNewAutomation() {
+    document.getElementById("newAutomation").style.display = "none";
+    clearNewAutomation();
+}
+
+function toggleTag(tag) {
+    if(tag.dataset.active == "true") {
+        // disable
+        tag.dataset.active = "false";      
+    } else {
+        tag.dataset.active = "true";
+    }
+}
+
+async function openAutomation(id) {
+    const newAutomation = document.getElementById("newAutomation");
+    newAutomation.querySelector(".title h1").textContent = "Edit Automation";
+    const wrapper = newAutomation;
+
+    getAutomation(id).then(automation => {
+        console.log(automation);
+
+        document.getElementById("automationName").value = automation.nickname;
+        document.getElementById("automationTime").value = `${automation.time.hour}:${automation.time.minute}`;
+        document.getElementById("automationActionSelect").value = automation.action;
+        document.getElementById("automationSelectAffectedRooms").value = automation.rooms;
+        
+        if(automation.weekday) {
+            document.getElementById("automationRepeat").querySelector(".tag[data-tag='weekday']").dataset.active = true;
+        }
+        if(automation.weekend) {
+            document.getElementById("automationRepeat").querySelector(".tag[data-tag='weekend']").dataset.active = true;
+        }
+        if(automation.smoothStateChange) {
+            document.getElementById("automationSmoothStateChange").value = true;
+        }
+       
+        wrapper.style.display = "block";
+
+        newAutomation.querySelector(".btn-primary").setAttribute("onclick", `saveAutomation('${id}')`)
+    })
+}
+
+
+// automation internal stuff
 function makeAutomations(automation) {
 
     const autoWrapper = document.createElement("div");
@@ -91,48 +157,67 @@ function makeAutomations(automation) {
 
 document.getElementById("current_automations").append(autoWrapper);
 
+const iconWrapper = document.createElement("div");
+        iconWrapper.setAttribute("class", "iconWrapper");
+    autoWrapper.appendChild(iconWrapper);
+    
+const editWrapper = document.createElement("div");
+        editWrapper.setAttribute("class", "editWrapper");
+        editWrapper.setAttribute("onclick", `openAutomation('${automation._id}'); event.stopPropagation();`);
+    iconWrapper.appendChild(editWrapper);
+        const editIcon = document.createElement("i");
+            editIcon.setAttribute("class", "fa-solid fa-pen");
+        editWrapper.appendChild(editIcon);
+
 const removeWrapper = document.createElement("div");
         removeWrapper.setAttribute("class", "removeWrapper");
         removeWrapper.setAttribute("onclick", `removeAutomation('${automation._id}')`);
-        const icon = document.createElement("i");
-            icon.setAttribute("class", "fa-solid fa-trash");
-        removeWrapper.appendChild(icon);
-        removeWrapper.style.height = "0px";
-        autoWrapper.appendChild(removeWrapper);
+    iconWrapper.appendChild(removeWrapper);
 
+        const trashIcon = document.createElement("i");
+            trashIcon.setAttribute("class", "fa-solid fa-trash");
+        removeWrapper.appendChild(trashIcon);
+        removeWrapper.style.height = "0px";
+        
     var hammertime = new Hammer(autoWrapper);
     hammertime.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
     hammertime.on("swipeup", function(ev) {
         if(removeWrapper.style.height == "0px") {
             removeWrapper.style.height = "43px";
+            editWrapper.style.height = "43px";
         } else {
             removeWrapper.style.height = "0px";
+            editWrapper.style.height = "0px";
         }
     })
     hammertime.on("swipedown", function(ev) {
         if(removeWrapper.style.height == "0px") {
             removeWrapper.style.height = "43px"; 
+            editWrapper.style.height = "43px";
         } else {
             removeWrapper.style.height = "0px";
+            editWrapper.style.height = "0px";
+
         }
     })
 } 
 
 async function getCurrentAutomations() {
     await clearCurrentAutomations();
-
-    // Fill groups
-    if(!document.getElementById("automationSelectAffectedRooms").querySelectorAll("option").length > 0) {
-        const groups = localStorage.getItem("groups").split(",");
-        groups.forEach(group => {
-            const parent = document.getElementById("automationSelectAffectedRooms");
-    
-            const option = document.createElement("option");
-                option.textContent = group;
-                option.setAttribute("value", group);
-            parent.appendChild(option);
-        })
-    }
+    try {
+        // Fill groups
+        if(!document.getElementById("automationSelectAffectedRooms").querySelectorAll("option").length > 0) {
+            const groups = localStorage.getItem("groups").split(",");
+            groups.forEach(group => {
+                const parent = document.getElementById("automationSelectAffectedRooms");
+        
+                const option = document.createElement("option");
+                    option.textContent = group;
+                    option.setAttribute("value", group);
+                parent.appendChild(option);
+            })
+        }
+    } catch (e) { console.error(e); }
 
     let diff;
     if(localStorage.hasOwnProperty("lastUpdated")) {
@@ -163,8 +248,15 @@ async function getCurrentAutomations() {
             makeAutomations(automation);
         })
     }
+}
 
-
+async function getAutomation(id) {
+    return new Promise((resolve,reject) => {
+        const url = `${HOST}/api/v2/automations/get/${id}`;
+        fetch(url).then(res => res.json()).then(res => {
+            resolve(res[0]);
+        })
+    })
 }
 
 function removeAutomation(id) {
@@ -219,27 +311,27 @@ function toggleAutomation(ele) {
     })
 }
 
-function clearCurrentAutomations() {
-    const newAutomationWrapper = document.getElementById("newAutomation");
-    try {
-        newAutomationWrapper.querySelectorAll("input").forEach(input => {
-            input.value = "";
-        })
-    } catch(e) {
-        console.error(e);
-    }
+function clearNewAutomationForm() {
+    const form = document.getElementById("newAutomation");
+    const formEles = form.querySelectorAll(".toSave");
+    formEles.forEach(ele => {
+        try {
+            ele.value = "";
+        } catch(e) {
+            console.error("Expected:", e);
+        }
+    })
+
+    form.querySelector(".btn-primary").setAttribute("onclick", "saveAutomation();");
 }
 
 function newAutomation() {
     clearNewAutomationForm();
+    document.getElementById("newAutomation").querySelector(".title h1").textContent = "New Automation";
     document.getElementById("newAutomation").style.display = "block";
 }
 
-function closeNewAutomation() {
-    document.getElementById("newAutomation").style.display = "none";
-}
-
-function saveAutomation() {
+function saveAutomation(id = "new") {
 
     let automationToSave = {};
 
@@ -270,7 +362,7 @@ function saveAutomation() {
         automationToSave[rawTag] = isActive;
     })
 
-    console.log("Automation to save:",automationToSave);
+    console.log("Automation to save:",automationToSave, id);
 
     
     automationToSave.scheduleTime = {
@@ -278,6 +370,10 @@ function saveAutomation() {
         "hourSingle": automationToSave.automationTime[1],
         "minuteTenths": automationToSave.automationTime[3],
         "minuteSingle": automationToSave.automationTime[4],
+    }
+
+    if(id.length == 0) {
+        automationToSave._id = id;
     }
 
     const body = automationToSave;
@@ -289,8 +385,10 @@ function saveAutomation() {
             "Content-Type": "application/json"
         }
     }
+    let url = `${HOST}/api/v2/automations/set`;
+    url += `/${id}`;
 
-    fetch(`${HOST}/api/v2/automations/set`, options).then(res => res.json())
+    fetch(url, options)
     .then(res => {
         console.log(res);
         makeNotice("Automation saved", "Your new Automation has been saved");
@@ -301,14 +399,6 @@ function saveAutomation() {
     })    
 }
 
-function toggleTag(tag) {
-    if(tag.dataset.active == "true") {
-        // disable
-        tag.dataset.active = "false";      
-    } else {
-        tag.dataset.active = "true";
-    }
-}
 
 // TIME UTILS
 

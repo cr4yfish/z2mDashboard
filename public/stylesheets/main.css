@@ -249,6 +249,10 @@ a.active {
     color: var(--themeColor);
 }
 
+input[type="checkbox"] {
+    width: 5%;
+}
+
 /* buttons */
 
 .btn {
@@ -533,14 +537,13 @@ a.active {
     margin: 0;
 }*/
 
-
 #lastUsed {
     display: flex;
     justify-content: center;
     flex-direction: row;
     flex-wrap: wrap;
     margin-top: 1rem;
-    width: 90%;
+    width: 70%;
     margin-left: 50%;
     transform: translateX(-50%);
     margin-bottom: 2rem;
@@ -853,8 +856,16 @@ input[type=time] {
     margin-bottom: .85rem !important;
 }
 
-.removeWrapper {
-    background-color: #ff6767;
+.iconWrapper {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.removeWrapper, .editWrapper {
     border-radius: 9px;
     height: 0px;
     overflow: hidden;
@@ -862,7 +873,15 @@ input[type=time] {
     align-content: center;
     justify-content: center;
     align-items: center;
+    width: 49%;
     transition: all .5s;
+}
+
+.removeWrapper {
+    background-color: #ff1f1f4d;
+}
+.editWrapper {
+    background-color: #ffffff78;
 }
 
 .content-wrapper .input-wrapper > label {

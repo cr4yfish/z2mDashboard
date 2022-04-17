@@ -138,12 +138,12 @@ db.automations.loadDatabase();
 
 const makeNewAutomation = function(automation) {
     return new Promise((resolve, reject) => {
-        db.automations.insert(automation, function(err, docs) {
+        db.automations.insert(automation, function(err, doc) {
             if(!err) {
-                db.automations.persistence.compactDatafile();
-                resolve(docs);
+                db.automations.compactDatafile();
+                resolve(doc._id);
             } else {
-                reject(err, docs);
+                reject(err, doc);
             }
         })
     })
@@ -161,12 +161,36 @@ const getAllAutomations = function() {
     })
 }
 
+const getAutomation = function(id) {
+    return new Promise((resolve,reject) => {
+        db.automations.find( { _id: id}, function(err, docs) {
+            if(!err) {
+                resolve(docs);
+            } else {
+                reject(err, docs);
+            }
+        })
+    })
+}
+
+const getIdByName = function(name) {
+    return new Promise((resolve,reject) => {
+        db.automations.find( { nickname: name }, function(err, docs) {
+            if(!err) {
+                resolve(docs[0]._id);
+            } else {
+                reject(err, docs);
+            }
+        })
+    })
+}
+
 // replaced document by given id
 const updateAutomation = function(newState) {
     return new Promise((resolve, reject) => {
-        db.automations.update({ nickname : newState.nickname }, newState, function(err, numReplaced) {
+        db.automations.update({ _id : newState.id }, newState, function(err, numReplaced) {
             if(!err) {
-                db.automations.persistence.compactDatafile();
+                db.automations.compactDatafile();
                 resolve(numReplaced);
             } else {
                 reject(err);
@@ -180,7 +204,7 @@ const removeAutomation = function(id) {
     return new Promise((resolve, reject) => {
         db.automations.remove({ _id: id }, function(err, numRemoved) {
             if(!err) {
-                db.automations.persistence.compactDatafile();
+                db.automations.compactDatafile();
                 resolve(numRemoved);
             } else {
                 reject(err);
@@ -191,8 +215,10 @@ const removeAutomation = function(id) {
 
 exports.makeNewAutomation = makeNewAutomation;
 exports.getAllAutomations = getAllAutomations;
+exports.getAutomation = getAutomation;
 exports.updateAutomation = updateAutomation;
 exports.removeAutomation = removeAutomation;
+exports.getIdByName = getIdByName;
 
 console.log("Database module loaded")
 console.log("==========")
