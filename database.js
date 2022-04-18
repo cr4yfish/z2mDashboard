@@ -177,7 +177,9 @@ const getIdByName = function(name) {
     return new Promise((resolve,reject) => {
         db.automations.find( { nickname: name }, function(err, docs) {
             if(!err) {
-                resolve(docs[0]._id);
+                if(docs.length > 0) {
+                    resolve(docs[0]._id);
+                } else { resolve([{_id: ""}])};
             } else {
                 reject(err, docs);
             }
@@ -187,15 +189,10 @@ const getIdByName = function(name) {
 
 // replaced document by given id
 const updateAutomation = function(newState) {
-    return new Promise((resolve, reject) => {
-        db.automations.update({ _id : newState.id }, newState, function(err, numReplaced) {
-            if(!err) {
-                db.automations.compactDatafile();
-                resolve(numReplaced);
-            } else {
-                reject(err);
-            }
-        })
+    return new Promise( async (resolve, reject) => {
+        const { numReplaced } = await db.automations.updateAsync({ _id : newState.id }, newState);
+        db.automations.compactDatafile();
+        resolve(numReplaced);
     })
 }
 

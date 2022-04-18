@@ -504,12 +504,14 @@ app.get("/settings", (req, res) => {
     (async function refreshAutomations() {
         const automations = await database.getAllAutomations();
         automations.forEach(automation => {
+            console.log(`Got automation:\n${automation.nickname} with id: ${automation._id}\n*******`);
             memoryAutomations[automation._id] = new Automation(automation, false);
         })
     })();
 
     app.post("/api/v2/automations/set/:id", async (req,res) => {
         const newAutomation = req.body;
+        console.log("new automation:", newAutomation);
 
         let formattedAutomation = {
             time: newAutomation.scheduleTime,
@@ -525,6 +527,8 @@ app.get("/settings", (req, res) => {
             transitionSpeed: newAutomation.automationTransitionSpeed,
         }
 
+        // dumb repeat stuff
+        // rework this!
         if(newAutomation.weekday) {
             formattedAutomation.weekday = true;
             formattedAutomation.dayStart = 1;
@@ -551,10 +555,11 @@ app.get("/settings", (req, res) => {
             const automation = memoryAutomations[req.params.id];
                 automation.stopAutomation();
                 automation.setObject(formattedAutomation);
-                await automation.updateInDatabase();
+                const numReplaced = await automation.updateInDatabase();
+                console.log(numReplaced);
                 automation.startAutomation();
 
-                res.send(memoryAutomations[automation.getId()].automationTask.nextInvocation());
+                res.send(automation.automationTask.nextInvocation());
 
         } else {
             // make new automation

@@ -328,6 +328,9 @@ input[type="checkbox"] {
     border-radius: 20%;
 }
 
+.btn-round:last-of-type {
+    right: 30%;
+}
 
 #groups, #scenes, #GroupScreenScenes, #GroupScreenLights {
     width: 70%;
@@ -616,6 +619,11 @@ input[type="checkbox"] {
     color: black;
 }
 
+.banner-negative {
+    background-color: #DFB2B2;
+    color: black;
+}
+
 .banner span {
     color: inherit;
     font-size: 0.75rem;
@@ -634,6 +642,10 @@ input[type="checkbox"] {
 
 .banner .banner-positive .fas {
     color: #3B533B;
+}
+
+.banner .banner-negative .fas {
+    color: #6C4F4F;
 }
 
 /* negative banner */
@@ -854,6 +866,12 @@ input[type=time] {
     padding: .25rem;
     border-radius: 9px;
     margin-bottom: .85rem !important;
+}
+
+.tagWrapper {
+    height: fit-content;
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .iconWrapper {

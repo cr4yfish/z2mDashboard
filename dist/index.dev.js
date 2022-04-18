@@ -26,7 +26,8 @@ var _require3 = require("express/lib/response"),
     send = _require3.send;
 
 var _require4 = require("path"),
-    resolve = _require4.resolve;
+    resolve = _require4.resolve,
+    format = _require4.format;
 
 var _require5 = require("http"),
     request = _require5.request;
@@ -50,18 +51,23 @@ app.listen(_PORT); //
 // Cors setup
 
 app.use(cors()); //
+// cache setup
+
+var cacheTime = 86400000 * 7; // 7 days
+//
 // expose public folder
 
-app.use(express["static"](path.join(__dirname, "/public"))); //
-// MQTT init setup
+app.use(express["static"](path.join(__dirname, "/public"), {
+  maxAge: cacheTime
+})); //
+// init setup
 
+var globals = require("./globals");
+
+var groups = [];
 var themeColor;
 var configfile = path.join(__dirname, "configfile.json");
-
-var _IPADDRESS;
-
 var loadedConfig;
-var client;
 var client;
 jsonfile.readFile(configfile).then(function (obj) {
   // general settings stuff
@@ -70,7 +76,7 @@ jsonfile.readFile(configfile).then(function (obj) {
   themeColor = obj.theme_color; // mqtt stuff
 
   console.log("connecting to ".concat(obj.ip, ":").concat(obj.port));
-  _IPADDRESS = "".concat(obj.ip, ":").concat(obj.port);
+  globals.setIPAddress("".concat(obj.ip, ":").concat(obj.port));
   client = mqtt.connect("mqtt://".concat(obj.ip, ":").concat(obj.port));
   client.subscribe("zigbee2mqtt", function (err, granted) {
     console.log(granted);
@@ -93,11 +99,11 @@ function refreshSettings() {
     Queue.setQueueTimeout(obj.queue_timeout_time);
     themeColor = obj.theme_color;
   });
-} // writes new data to configfile
+} // ==== CONFIG STUFF
+// writes new data to configfile
 
 
 app.post("/writeConfig", function (req, res) {
-  console.log("new write config request", req.body);
   jsonfile.writeFile(configfile, req.body, function (err) {
     if (!err) {
       try {
@@ -143,17 +149,19 @@ app.get("/scenes", function (req, res) {
   });
 });
 app.get("/automation", function (req, res) {
-  res.render("automation.ejs", {});
+  res.render("automation.ejs", {
+    themeColor: themeColor
+  });
 });
 app.get("/settings", function (req, res) {
   res.render("settings.ejs", {
     themeColor: themeColor
   });
 }); ///////
-////// -- BACKEND APIs
+// ====== BACKEND APIs
 
 app.post("/set/:name/:key/:value", function _callee(req, res) {
-  var name, state, value, parsedValue, url;
+  var name, state, value, parsedValue, url, data, request;
   return regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -180,23 +188,30 @@ app.post("/set/:name/:key/:value", function _callee(req, res) {
 
           url = "zigbee2mqtt/".concat(name, "/set");
           console.log(url, state);
-          _context.prev = 7;
-          _context.next = 10;
-          return regeneratorRuntime.awrap(mqttNetwork.sendRequest(url, state));
+          request = {
+            url: url,
+            body: state
+          };
+          _context.prev = 8;
+          _context.next = 11;
+          return regeneratorRuntime.awrap(Queue.insertNewRequest(request, "sendData"));
 
-        case 10:
-          res.status(200);
+        case 11:
+          data = _context.sent;
           _context.next = 17;
           break;
 
-        case 13:
-          _context.prev = 13;
-          _context.t0 = _context["catch"](7);
-          console.log(_context.t0);
-          res.status(500);
+        case 14:
+          _context.prev = 14;
+          _context.t0 = _context["catch"](8);
+          data = {
+            "Error": _context.t0.reason,
+            "Request": _context.t0.Request,
+            "done": false
+          };
 
         case 17:
-          res.send();
+          res.send(data);
           console.log("sentResponse");
           console.log("====== DONE =====");
 
@@ -205,7 +220,7 @@ app.post("/set/:name/:key/:value", function _callee(req, res) {
           return _context.stop();
       }
     }
-  }, null, null, [[7, 13]]);
+  }, null, null, [[8, 14]]);
 });
 app.get("/getIndivData/:friendlyName/:attribute", function _callee2(req, res) {
   var Request, data;
@@ -257,7 +272,8 @@ app.get("/getIndivData/:friendlyName/:attribute", function _callee2(req, res) {
       }
     }
   }, null, null, [[4, 16]]);
-});
+}); // will be deprecated when Queue system rolls out
+
 app.post("/getDataForMultipleLights", function _callee3(req, res) {
   var reqArray, resArray, currentReq, data;
   return regeneratorRuntime.async(function _callee3$(_context3) {
@@ -311,46 +327,11 @@ app.post("/getDataForMultipleLights", function _callee3(req, res) {
       }
     }
   }, null, null, [[5, 16]]);
-});
-app.post("/api/test/queue", function _callee4(req, res) {
-  var data;
-  return regeneratorRuntime.async(function _callee4$(_context4) {
-    while (1) {
-      switch (_context4.prev = _context4.next) {
-        case 0:
-          _context4.prev = 0;
-          _context4.next = 3;
-          return regeneratorRuntime.awrap(Queue.insertNewRequest(req.body.request, req.body.type));
-
-        case 3:
-          data = _context4.sent;
-          _context4.next = 9;
-          break;
-
-        case 6:
-          _context4.prev = 6;
-          _context4.t0 = _context4["catch"](0);
-          data = {
-            "Error": _context4.t0.reason,
-            "Request": _context4.t0.Request,
-            "done": false
-          };
-
-        case 9:
-          res.send(data);
-
-        case 10:
-        case "end":
-          return _context4.stop();
-      }
-    }
-  }, null, null, [[0, 6]]);
-});
-var groups = []; // get groups
+}); // get groups
 
 app.get("/getGroups", function (req, res) {
   console.log("Getting groups");
-  client = mqtt.connect("mqtt://".concat(_IPADDRESS));
+  client = mqtt.connect("mqtt://".concat(globals.getIPAddress()));
   client.on("connect", function () {
     if (groups.length > 0) {
       console.log("using cache");
@@ -408,47 +389,84 @@ app.get("/getGroups", function (req, res) {
   });
 }); // gets data from bridge
 
-app.get("/getData/:topic", function _callee5(req, res) {
+app.get("/getData/:topic", function _callee4(req, res) {
   var topicsArray, request, data;
-  return regeneratorRuntime.async(function _callee5$(_context5) {
+  return regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
-      switch (_context5.prev = _context5.next) {
+      switch (_context4.prev = _context4.next) {
         case 0:
           console.log("Getting data from topic");
-          topicsArray = req.params.topic.split("&"); //console.log(topicsArray);
+          topicsArray = req.params.topic.split("&").join().replaceAll(",", "/"); //console.log(topicsArray);
 
           request = {
-            topic: topicsArray.join().replace(",", "/"),
-            url: "zigbee2mqtt/".concat(topic)
+            topic: topicsArray,
+            url: "zigbee2mqtt/".concat(topicsArray)
           };
-          _context5.prev = 3;
-          _context5.next = 6;
-          return regeneratorRuntime.awrap(getData(request));
+          _context4.prev = 3;
+          _context4.next = 6;
+          return regeneratorRuntime.awrap(Queue.insertNewRequest(request, "getData"));
 
         case 6:
-          data = _context5.sent;
+          data = _context4.sent;
           res.send(data);
-          _context5.next = 15;
+          _context4.next = 15;
           break;
 
         case 10:
-          _context5.prev = 10;
-          _context5.t0 = _context5["catch"](3);
-          console.log("Error at getData/", topic, "Err or not granted");
-          console.log(_context5.t0);
+          _context4.prev = 10;
+          _context4.t0 = _context4["catch"](3);
+          console.log("Error at getData/", topicsArray, "Err or not granted");
+          console.log(_context4.t0);
           res.status(500).send();
 
         case 15:
         case "end":
-          return _context5.stop();
+          return _context4.stop();
       }
     }
   }, null, null, [[3, 10]]);
-});
+}); // new API
+
+app.post("/api/v2/queue", function _callee5(req, res) {
+  var data;
+  return regeneratorRuntime.async(function _callee5$(_context5) {
+    while (1) {
+      switch (_context5.prev = _context5.next) {
+        case 0:
+          _context5.prev = 0;
+          _context5.next = 3;
+          return regeneratorRuntime.awrap(Queue.insertNewRequest(req.body.request, req.body.type));
+
+        case 3:
+          data = _context5.sent;
+          _context5.next = 9;
+          break;
+
+        case 6:
+          _context5.prev = 6;
+          _context5.t0 = _context5["catch"](0);
+          data = {
+            "Error": _context5.t0.reason,
+            "Request": _context5.t0.Request,
+            "done": false
+          };
+
+        case 9:
+          res.send(data);
+
+        case 10:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  }, null, null, [[0, 6]]);
+}); // ==== MIRROR
+// make new mirror
+
 app.get("/refreshMirror", function (req, res) {
   console.log("Refreshing cached data...");
   console.log("Connecting to MQTT broker...");
-  client = mqtt.connect("mqtt://".concat(_IPADDRESS));
+  client = mqtt.connect("mqtt://".concat(globals.getIPAddress));
   client.on("connect", function () {
     var topic = "bridge/devices";
     var url = "zigbee2mqtt/".concat(topic);
@@ -476,7 +494,8 @@ app.get("/refreshMirror", function (req, res) {
       }
     });
   });
-});
+}); // return mirror
+
 app.get("/getMirror", function (req, res) {
   console.log("Getting mirror...");
   database.getMirror().then(function (databaseRes) {
@@ -484,7 +503,9 @@ app.get("/getMirror", function (req, res) {
     console.log("Sending mirror");
     res.send(databaseRes);
   });
-}); // saves current setup to scenes db
+}); //
+// ===== SCENES
+// save scene
 
 app.post("/saveScene/:name/:group/:bri", function (req, res) {
   console.log("saving scene...");
@@ -513,7 +534,7 @@ app.post("/saveScene/:name/:group/:bri", function (req, res) {
       }
     });
   });
-}); // returns scenes
+}); // return scenes
 
 app.get("/getScenes", function (req, res) {
   database.getAllScenes().then(function (returnDocs) {
@@ -525,7 +546,7 @@ app.get("/getScenes", function (req, res) {
       console.log(err);
     }
   });
-}); // executes scene
+}); // execute scene
 
 app.get("/scene/:groupName/:sceneId", function _callee7(req, res) {
   var url, state;
@@ -562,7 +583,8 @@ app.get("/scene/:groupName/:sceneId", function _callee7(req, res) {
       }
     }
   }, null, null, [[3, 9]]);
-}); // updates program
+}); // ======= UPDATE
+// updates program
 
 app.get("/update", function (req, res) {
   console.log("Sending update ok");
@@ -586,100 +608,210 @@ app.post("/updateProgram", function (req, res) {
       res.status(200).send();
     }
   });
-}); // ===== REWORKED FUNCTIONS WITH QUEUE SYSTEM
-// getIndivData Params: @Request: { url: String, body: Object }
+}); // ===== AUTOMATIONS
 
-function getIndivData(Request) {
-  return new Promise(function _callee8(resolve, reject) {
-    var data;
-    return regeneratorRuntime.async(function _callee8$(_context8) {
-      while (1) {
-        switch (_context8.prev = _context8.next) {
-          case 0:
-            console.log("Getting indiv data for", Request.reqFriendlyName);
-            _context8.prev = 1;
-            _context8.next = 4;
-            return regeneratorRuntime.awrap(mqttNetwork.experimentalRequest(Request.url, Request.body));
+var _require8 = require("./automations"),
+    Automation = _require8.Automation; // holds array of automations. Get one by inserting the id
 
-          case 4:
-            data = _context8.sent;
-            data.friendlyName = Request.reqFriendlyName;
-            console.log("Done getting data");
-            _context8.next = 12;
-            break;
 
-          case 9:
-            _context8.prev = 9;
-            _context8.t0 = _context8["catch"](1);
-            reject(_context8.t0);
+var memoryAutomations = {};
 
-          case 12:
-          case "end":
-            return _context8.stop();
-        }
+(function refreshAutomations() {
+  var automations;
+  return regeneratorRuntime.async(function refreshAutomations$(_context8) {
+    while (1) {
+      switch (_context8.prev = _context8.next) {
+        case 0:
+          _context8.next = 2;
+          return regeneratorRuntime.awrap(database.getAllAutomations());
+
+        case 2:
+          automations = _context8.sent;
+          automations.forEach(function (automation) {
+            console.log("Got automation:\n".concat(automation.nickname, " with id: ").concat(automation._id, "\n*******"));
+            memoryAutomations[automation._id] = new Automation(automation, false);
+          });
+
+        case 4:
+        case "end":
+          return _context8.stop();
       }
-    }, null, null, [[1, 9]]);
+    }
   });
-} // getData Params:  @Request : { url: string, body: Object } 
+})();
 
+app.post("/api/v2/automations/set/:id", function _callee8(req, res) {
+  var newAutomation, formattedAutomation, automation, numReplaced, _automation;
 
-function getData(Request) {
-  return new Promise(function _callee9(resolve, reject) {
-    var data;
-    return regeneratorRuntime.async(function _callee9$(_context9) {
-      while (1) {
-        switch (_context9.prev = _context9.next) {
-          case 0:
-            _context9.prev = 0;
-            _context9.next = 3;
-            return regeneratorRuntime.awrap(mqttNetwork.getRequest(Request.url, "message"));
+  return regeneratorRuntime.async(function _callee8$(_context9) {
+    while (1) {
+      switch (_context9.prev = _context9.next) {
+        case 0:
+          newAutomation = req.body;
+          console.log("new automation:", newAutomation);
+          formattedAutomation = {
+            time: newAutomation.scheduleTime,
+            days: "",
+            dayStart: 0,
+            dayEnd: 0,
+            rooms: newAutomation.automationSelectAffectedRooms,
+            nickname: newAutomation.automationName,
+            action: newAutomation.automationActionSelect,
+            weekday: false,
+            weekend: false,
+            smoothStateChange: newAutomation.automationSmoothStateChange,
+            transitionSpeed: newAutomation.automationTransitionSpeed
+          }; // dumb repeat stuff
+          // rework this!
 
-          case 3:
-            data = _context9.sent;
-            resolve(data);
-            _context9.next = 10;
+          if (newAutomation.weekday) {
+            formattedAutomation.weekday = true;
+            formattedAutomation.dayStart = 1;
+            formattedAutomation.dayEnd = 5;
+          }
+
+          if (newAutomation.weekend) {
+            formattedAutomation.weekend = true;
+            formattedAutomation.days = 6;
+            formattedAutomation.dayEnd = 0;
+          }
+
+          if (newAutomation.weekday && newAutomation.weekend) {
+            formattedAutomation.dayStart = 0;
+            formattedAutomation.dayEnd = 6;
+          }
+
+          formattedAutomation.time = {
+            minute: "".concat(formattedAutomation.time.minuteTenths).concat(formattedAutomation.time.minuteSingle),
+            hour: "".concat(formattedAutomation.time.hourTenths).concat(formattedAutomation.time.hourSingle)
+          };
+
+          if (!(req.params.id != "new")) {
+            _context9.next = 19;
             break;
+          }
 
-          case 7:
-            _context9.prev = 7;
-            _context9.t0 = _context9["catch"](0);
-            reject(_context9.t0);
+          // update old automation
+          automation = memoryAutomations[req.params.id];
+          automation.stopAutomation();
+          automation.setObject(formattedAutomation);
+          _context9.next = 13;
+          return regeneratorRuntime.awrap(automation.updateInDatabase());
 
-          case 10:
-          case "end":
-            return _context9.stop();
-        }
+        case 13:
+          numReplaced = _context9.sent;
+          console.log(numReplaced);
+          automation.startAutomation();
+          res.send(automation.automationTask.nextInvocation());
+          _context9.next = 21;
+          break;
+
+        case 19:
+          // make new automation
+          // TODO: CHECK IF NICKNAME IS DOUBLE
+          _automation = new Automation(formattedAutomation);
+
+          _automation.getIdByName().then(function (id) {
+            memoryAutomations[id] = _automation;
+            res.send(_automation.automationTask.nextInvocation());
+          });
+
+        case 21:
+        case "end":
+          return _context9.stop();
       }
-    }, null, null, [[0, 7]]);
+    }
   });
-} // sendData params: @Request { url: String, body: Object }
+});
+app.post("/api/v2/automations/start", function (req, res) {
+  memoryAutomations[req.body.id].startAutomation();
+  res.send("started");
+});
+app.post("/api/v2/automations/stop", function (req, res) {
+  memoryAutomations[req.body.id].stopAutomation();
+  res.send("stopped");
+});
+app.get("/api/v2/automations/get", function _callee9(req, res) {
+  return regeneratorRuntime.async(function _callee9$(_context10) {
+    while (1) {
+      switch (_context10.prev = _context10.next) {
+        case 0:
+          database.getAllAutomations().then(function (automations) {
+            res.send(automations);
+          });
 
+        case 1:
+        case "end":
+          return _context10.stop();
+      }
+    }
+  });
+});
+app.get("/api/v2/automations/get/:id", function _callee10(req, res) {
+  return regeneratorRuntime.async(function _callee10$(_context11) {
+    while (1) {
+      switch (_context11.prev = _context11.next) {
+        case 0:
+          database.getAutomation(req.params.id).then(function (automation) {
+            res.send(automation);
+          });
+
+        case 1:
+        case "end":
+          return _context11.stop();
+      }
+    }
+  });
+});
+app.post("/api/v2/automations/remove", function _callee11(req, res) {
+  return regeneratorRuntime.async(function _callee11$(_context12) {
+    while (1) {
+      switch (_context12.prev = _context12.next) {
+        case 0:
+          try {
+            database.removeAutomation(req.body.id).then(function (removed) {
+              res.sendStatus(200);
+            });
+          } catch (e) {
+            res.sendStatus(500);
+            console.error("Error", removed);
+          }
+
+        case 1:
+        case "end":
+          return _context12.stop();
+      }
+    }
+  });
+}); // ======
+// ===== REWORKED FUNCTIONS FOR QUEUE SYSTEM
+// sendData params: @Request { url: String, body: Object }
 
 function sendData(Request) {
-  return new Promise(function _callee10(resolve, reject) {
+  return new Promise(function _callee12(resolve, reject) {
     var data;
-    return regeneratorRuntime.async(function _callee10$(_context10) {
+    return regeneratorRuntime.async(function _callee12$(_context13) {
       while (1) {
-        switch (_context10.prev = _context10.next) {
+        switch (_context13.prev = _context13.next) {
           case 0:
-            _context10.prev = 0;
-            _context10.next = 3;
+            _context13.prev = 0;
+            _context13.next = 3;
             return regeneratorRuntime.awrap(mqttNetwork.sendRequest(Request.url, Request.body));
 
           case 3:
-            data = _context10.sent;
+            data = _context13.sent;
             resolve(data);
-            _context10.next = 10;
+            _context13.next = 10;
             break;
 
           case 7:
-            _context10.prev = 7;
-            _context10.t0 = _context10["catch"](0);
-            reject(_context10.t0);
+            _context13.prev = 7;
+            _context13.t0 = _context13["catch"](0);
+            reject(_context13.t0);
 
           case 10:
           case "end":
-            return _context10.stop();
+            return _context13.stop();
         }
       }
     }, null, null, [[0, 7]]);

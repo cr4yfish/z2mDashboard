@@ -1,3 +1,13 @@
+// debug function
+function makeDebugAutomation() {
+    clearNewAutomationForm();
+    const randomArray = ["foo", "bar", "test", "autoaton", "automasda", "asodjsajoda"];
+    // title
+    document.getElementById("automationName").value = randomArray[Math.floor(Math.random()*randomArray.length-1)]
+    document.getElementById("automationTime").value = "12:00";
+    saveAutomation();
+}
+
 // helper functions
 function closeOverlay() {
     document.getElementById("colorOverlay").style.display = "none";
@@ -109,6 +119,7 @@ function makeAutomations(automation) {
         autoTitleWrapper.appendChild(autoTime);
     autoWrapper.appendChild(autoTitleWrapper);
     const tags = document.createElement("div");
+        tags.setAttribute("class", "tagWrapper");
 
     const actionWrapper = document.createElement("div");
         actionWrapper.setAttribute("class", "actionWrapper");
@@ -271,12 +282,23 @@ function removeAutomation(id) {
         },
         body: JSON.stringify(body),
     }
-    fetch(url, options).then(res => {
-        console.log(res);
-        document.getElementById(id).remove();
-        localStorage.removeItem("automations");
-        localStorage.removeItem("lastUpdated");
-    })
+    try {
+        fetch(url, options).then(res => {
+            console.log(res);
+            document.getElementById(id).remove();
+            localStorage.removeItem("automations");
+            localStorage.removeItem("lastUpdated");
+            if(res.status != 200) {
+                console.error("status is not 200");
+                makeNotice("Warning", "The automation could not be removed", "negative");
+            } else {
+                makeNotice("Notice", "The automation has been removed");
+            }
+        })
+    } catch(e) {
+        console.error(e);
+        makeNotice("Warning", "The automation could not be removed", "negative");
+    }
 }
 
 function toggleAutomation(ele) {

@@ -82,21 +82,12 @@ function closeMenu() {
 }
 
 async function makeNotice(header = "Notice", str = "", state = "positive") {
-    let bgColor = "#B3DFB2";
-    let iconColor = "#3B533B";
-    let bannerClass = "positive";
+    let bannerClass = state;
 
     // switch state of banner
-    switch(state) {
-        case "negative":
-            bgColor = "#DFB2B2";
-            iconColor = "#6C4F4F";
-            bannerClass = "negative";
-            break;
-        case "info": 
-            break;
-        case "warn":
-            break;
+    let iconName = "check";
+    if(state === "negative") {
+        iconName = "times";
     }
 
     const bannerBody = document.createElement("div");
@@ -116,7 +107,8 @@ async function makeNotice(header = "Notice", str = "", state = "positive") {
 
         const bannerContent = document.createElement("div");
             bannerContent.setAttribute("class", "bannerContent");
-            bannerContent.innerHTML = str;
+            bannerContent.innerHTML = `<i class="fa fa-${iconName}"></i> `
+            bannerContent.innerHTML += str;
         bannerBody.appendChild(bannerContent);
 
     const numberOfBanners = document.querySelectorAll(".banner").length;

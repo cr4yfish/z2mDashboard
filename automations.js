@@ -108,8 +108,8 @@ class Automation {
         async updateInDatabase() {
             return new Promise(async (resolve,reject) => {
                 try {
-                    await database.updateAutomation(this.getObject());
-                    resolve();
+                    const numReplaced = await database.updateAutomation(this.getObject());
+                    resolve(numReplaced);
                 } catch (e) {
                     console.error(e);
                     reject(e);
@@ -125,13 +125,21 @@ class Automation {
             })
         }
 
+        setId() {
+            return new Promise(async (resolve,reject) => {
+                this.id = await database.getIdByName(this.nickname);
+                resolve(this.id);
+            })
+        }
+
         getId() {
             return this.id;
         }
 
-        update() {
+        async update() {
             try {
-                database.updateAutomation(this.getObject());
+                await this.setId();
+                await database.updateAutomation(this.getObject());
             } catch(e) {
                 console.error(e);
             }
