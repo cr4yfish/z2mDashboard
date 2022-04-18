@@ -62,6 +62,9 @@ class Automation {
             this.dayEnd = reqAutomation.dayEnd;
             this.smoothStateChange = reqAutomation.smoothStateChange;
             this.transitionSpeed = reqAutomation.transitionSpeed;
+            if(this.smoothStateChange) {
+                parseInt(this.time.minute) -= 2;
+            }
             this.makeRule();
             this.request = {
                 url: `zigbee2mqtt/${this.rooms}/set`,

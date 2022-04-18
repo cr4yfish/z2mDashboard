@@ -6,7 +6,7 @@
 
 - Automations: 
     . If weekend nor weekday is selected, an automation will
-                trigger everyday -> expected is single time
-    . Change animation time to start ahead of schedule
+      trigger everyday -> expected is single time
+    . Change smooth state change time to start ahead of schedule -- DONE, NOT TESTED
 
 - Change Frontend to use new Queue system -- COMPLETE
