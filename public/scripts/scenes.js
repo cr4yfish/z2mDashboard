@@ -41,7 +41,6 @@ function getGroups() {
     })
 }
 
-
 function setScene(group, sceneId, bri=254) {
     // set scene
     let url = `${HOST}/scene/${group}/${sceneId}`;
@@ -53,33 +52,20 @@ function setScene(group, sceneId, bri=254) {
 }
 
 function saveCurrentScene(buttonE) {
+    // replace "/", so API can read it
     let sceneName = document.getElementById("sceneNameInput").value.replace("/","&");
-    // replace "/", otherwise API will get it wrong
-    let sceneGroup = buttonE.dataset.friendlyname;
-
-    // get brightness
-    let url = `${HOST}/getData/${sceneGroup}`
-    fetch(url)
-    .then(res => res.json())
-    .then(function (response) {
-        let brightness = response.brightness;
-        
-        if(brightness == undefined) {
-            brightness = 253;
-        }
-
-        // save scene
-        url = `${HOST}/saveScene/${sceneName}/${sceneGroup}/${brightness}`
-
-        const options = {
-            method: "POST"
-        }
     
-        fetch(url, options)
-        .then(function(response) {
-            closeOverlay();
-            dashboardScene();
-        })
+    let sceneGroup = buttonE.dataset.friendlyname;
+    let brightness = 253;
+
+    // save scene
+    url = `${HOST}/saveScene/${sceneName}/${sceneGroup}/${brightness}`
+
+    fetch(url, { method: "POST" })
+    .then(function(response) {
+        console.log(response);
+        closeOverlay();
+        dashboardScene();
     })
 }
 

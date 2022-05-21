@@ -1,1 +1,1 @@
-{"ip":"192.168.0.100","port":"1883","version":"10","queue_timeout_time":"3","queue_refresh_timer":"1000","theme_color":{"primary":"#ffe3c0","background":"#795e35"}}
+{"ip":"192.168.0.100","port":"1883","version":"10","queue_timeout_time":"15","queue_refresh_timer":"1000","theme_color":{"primary":"#aaffa4","background":"#266a2b"}}

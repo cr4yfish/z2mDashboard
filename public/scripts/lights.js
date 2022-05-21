@@ -122,7 +122,7 @@ function makeSwiper() {
     }
 
     function removePlaceholders() {
-        return new Promise((reolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
                 // lightboxes
                 document.querySelectorAll(".lightBox").forEach(lightBox => {
@@ -135,7 +135,7 @@ function makeSwiper() {
                 resolve();
             } catch(e) {
                 console.error(e);
-                reject();
+                reject(e);
             }
         })
     }
