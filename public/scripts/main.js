@@ -22,7 +22,7 @@
     })
 })();
 
-const HOST = 'http://localhost:30000';
+const HOST = '';
 //const HOST = 'http://192.168.0.100:30000';
 
 function sleep(ms) {

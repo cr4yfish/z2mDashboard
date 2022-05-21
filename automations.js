@@ -63,7 +63,7 @@ class Automation {
             this.smoothStateChange = reqAutomation.smoothStateChange;
             this.transitionSpeed = reqAutomation.transitionSpeed;
             if(this.smoothStateChange) {
-                parseInt(this.time.minute) -= 2;
+                parseInt(this.time.minute) - 2;
             }
             this.makeRule();
             this.request = {
