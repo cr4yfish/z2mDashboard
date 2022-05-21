@@ -66,7 +66,12 @@ function saveCurrentScene(buttonE) {
         console.log(response);
         closeOverlay();
         dashboardScene();
+        refreshLocalScenes();
     })
+}
+
+const refreshLocalScenes = () => {
+    localStorage.clear("scenes");
 }
 
 function getScenes() {
