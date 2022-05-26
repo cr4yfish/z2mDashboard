@@ -43,7 +43,7 @@ function makeSlider(friendlyName) {
             start: [0, 254],
             step: 1,
             connect: true,
-            behaviour: "tap-drag",
+            behaviour: "drag",
             range: {
                 'min': 0,
                 'max': 254

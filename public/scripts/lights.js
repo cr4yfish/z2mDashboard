@@ -142,8 +142,6 @@ function makeSwiper() {
 
 //
 
-
-
 // ==== GROUPS
 
     function getGoupsNetwork() {
