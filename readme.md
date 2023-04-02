@@ -1,6 +1,11 @@
 # z2m Dashboard
 z2m Dashboard is an easy to use backend API with an own frontend for zigbee2mqtt.
 
+### Heads up
+I don't maintain this project anymore.
+Since I don't have the free time anymore to work on pointless projects like these this will probably stay unmaintained forever.
+If I ever find the time to make something like this again, I'd probably just redo the zigbee2mqtt projects' UI/UX.
+
 ## Features
 
 - Configure settings in frontend
